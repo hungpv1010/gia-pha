@@ -893,11 +893,13 @@ function render(){
     const pup = unitPos[puid];
     if (!pup) return;
 
-    // find the "couple center" x for the parent unit
     const pUnit = units.find(u=>u.id===puid);
     // drop-down point: bottom-center of parent unit
+    // use actual node height (photo nodes are taller)
+    const pMember = members.find(x=>x.id===pUnit.members[0]);
+    const pNodeH = pMember && pMember.photo ? NODE_H + 44 : NODE_H;
     const fromX = pup.x;
-    const fromY = pup.y + NODE_H;
+    const fromY = pup.y + pNodeH;
     // midpoint Y between parent bottom and children top
     const firstChild = childUnits[0];
     const childY = unitPos[firstChild.id]?.y ?? (pup.y + NODE_H + V_GAP);
@@ -951,17 +953,32 @@ function render(){
     const stroke=isSelected?'#ffd700':c.stroke;
     const sw=isSelected?3:1.5;
     const glow=isSelected?' filter="url(#glow)"':'';
-    const initials=m.name.split(' ').slice(-2).map(n=>n[0]).join('').toUpperCase();
     const yearStr=m.birth?(m.death?`${m.birth}–${m.death}`:`sinh ${m.birth}`):'';
-    const shortName=m.name.length>18?m.name.slice(0,17)+'…':m.name;
+    const shortName=m.name.length>16?m.name.slice(0,15)+'…':m.name;
+
+    const hasPhoto = !!m.photo;
+    const nodeH = hasPhoto ? NODE_H + 44 : NODE_H; // taller when photo
+    const photoR = 20; // radius of photo circle
+    const photoX = p.x;
+    const photoY = p.y + photoR + 6; // center of photo circle
+    const textY0  = hasPhoto ? p.y + photoR*2 + 16 : p.y; // text start offset
+    const clipId = `cp_${m.id}`;
 
     html+=`<g class="node" data-id="${m.id}" style="cursor:pointer;opacity:${opacity}" onclick="selectMember('${m.id}')">
-      <rect x="${p.x-NODE_W/2}" y="${p.y}" width="${NODE_W}" height="${NODE_H}" rx="${rx}" fill="${c.fill}" stroke="${stroke}" stroke-width="${sw}" filter="url(#shadow)"${glow}/>
+      <rect x="${p.x-NODE_W/2}" y="${p.y}" width="${NODE_W}" height="${nodeH}" rx="${rx}" fill="${c.fill}" stroke="${stroke}" stroke-width="${sw}" filter="url(#shadow)"${glow}/>
       ${alive?`<circle cx="${p.x+NODE_W/2-8}" cy="${p.y+8}" r="4" fill="#40c060"/>`:``}
-      ${m.photo?`<clipPath id="cp${m.id}"><circle cx="${p.x-NODE_W/2+18}" cy="${p.y+NODE_H/2}" r="14"/></clipPath><image href="${m.photo}" x="${p.x-NODE_W/2+4}" y="${p.y+NODE_H/2-14}" width="28" height="28" clip-path="url(#cp${m.id})" preserveAspectRatio="xMidYMid slice"/>`:``}
-      <text x="${p.x+(m.photo?10:0)}" y="${p.y+22}" text-anchor="middle" fill="${c.text}" font-family="Cormorant Garamond,serif" font-size="13" font-weight="600">${shortName}</text>
-      <text x="${p.x+(m.photo?10:0)}" y="${p.y+38}" text-anchor="middle" fill="${c.stroke}" font-family="Cormorant Garamond,serif" font-size="10" font-style="italic">${yearStr}</text>
-      <text x="${p.x+(m.photo?10:0)}" y="${p.y+52}" text-anchor="middle" fill="rgba(255,255,255,.35)" font-family="Cormorant Garamond,serif" font-size="9">Đời ${g+1}</text>
+      ${hasPhoto?`
+        <defs><clipPath id="${clipId}"><circle cx="${photoX}" cy="${photoY}" r="${photoR}"/></clipPath></defs>
+        <circle cx="${photoX}" cy="${photoY}" r="${photoR+2}" fill="none" stroke="${stroke}" stroke-width="1.5"/>
+        <image href="${m.photo}" x="${photoX-photoR}" y="${photoY-photoR}" width="${photoR*2}" height="${photoR*2}" clip-path="url(#${clipId})" preserveAspectRatio="xMidYMid slice"/>
+        <text x="${p.x}" y="${textY0+20}" text-anchor="middle" fill="${c.text}" font-family="Cormorant Garamond,serif" font-size="13" font-weight="600">${shortName}</text>
+        <text x="${p.x}" y="${textY0+34}" text-anchor="middle" fill="${c.stroke}" font-family="Cormorant Garamond,serif" font-size="10" font-style="italic">${yearStr}</text>
+        <text x="${p.x}" y="${textY0+46}" text-anchor="middle" fill="rgba(255,255,255,.35)" font-family="Cormorant Garamond,serif" font-size="9">Đời ${g+1}</text>
+      `:`
+        <text x="${p.x}" y="${p.y+22}" text-anchor="middle" fill="${c.text}" font-family="Cormorant Garamond,serif" font-size="13" font-weight="600">${shortName}</text>
+        <text x="${p.x}" y="${p.y+38}" text-anchor="middle" fill="${c.stroke}" font-family="Cormorant Garamond,serif" font-size="10" font-style="italic">${yearStr}</text>
+        <text x="${p.x}" y="${p.y+52}" text-anchor="middle" fill="rgba(255,255,255,.35)" font-family="Cormorant Garamond,serif" font-size="9">Đời ${g+1}</text>
+      `}
     </g>`;
   });
 
