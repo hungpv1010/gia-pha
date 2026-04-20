@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <style>
   :root {
     --ink: #1a0f00;
@@ -555,16 +556,15 @@
 
       <!-- ẢNH ĐẠI DIỆN -->
       <div class="form-group" style="text-align:center;margin-bottom:1rem">
-        <div id="photo-preview" style="
-          width:80px;height:80px;border-radius:50%;border:2px dashed rgba(139,105,20,.5);
-          background:rgba(139,105,20,.08);margin:0 auto .5rem;
+        <input type="file" id="f-photo-file" accept="image/*" style="display:none" onchange="handlePhotoFile(event)">
+        <div id="photo-preview" onclick="document.getElementById('f-photo-file').click()" style="
+          width:90px;height:90px;border-radius:50%;border:2px dashed rgba(139,105,20,.6);
+          background:rgba(139,105,20,.08);margin:0 auto .4rem;cursor:pointer;
           display:flex;align-items:center;justify-content:center;overflow:hidden;
-          font-size:1.8rem;color:rgba(139,105,20,.5)">👤</div>
-        <div style="margin-top:.5rem;display:flex;gap:.4rem;align-items:center;max-width:320px;margin-left:auto;margin-right:auto">
-          <input id="f-photo-url" type="text" placeholder="Dán URL ảnh (https://...)" style="flex:1;font-family:'Cormorant Garamond',serif;font-size:.85rem;padding:.35rem .6rem;border:1px solid rgba(139,105,20,.4);background:rgba(255,255,255,.6);border-radius:2px;outline:none;color:var(--ink)" oninput="previewPhotoUrl(this.value)">
-          <button type="button" onclick="clearPhoto()" style="font-size:.75rem;color:var(--red);background:none;border:1px solid var(--red);border-radius:2px;padding:.3rem .5rem;cursor:pointer;font-family:inherit;white-space:nowrap">✕ Xóa</button>
-        </div>
-        <div style="font-size:.75rem;color:var(--sepia);font-style:italic;margin-top:.3rem">Dán link ảnh từ internet hoặc Google Drive (ảnh công khai)</div>
+          font-size:2rem;color:rgba(139,105,20,.5);transition:all .2s;position:relative"
+          onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='rgba(139,105,20,.6)'">👤</div>
+        <div style="font-size:.78rem;color:var(--sepia);font-style:italic;margin-bottom:.3rem">Nhấn vào avatar để chọn ảnh</div>
+        <button type="button" id="btn-clear-photo" onclick="clearPhoto()" style="display:none;font-size:.75rem;color:var(--red);background:none;border:1px solid var(--red);border-radius:2px;padding:.25rem .6rem;cursor:pointer;font-family:inherit">✕ Xóa ảnh</button>
       </div>
 
       <div class="form-row">
@@ -1118,7 +1118,7 @@ function openEditModal(id){
 }
 
 function clearForm(){
-  ['f-name','f-birth','f-death','f-birthplace','f-job','f-note','f-phone','f-email','f-facebook','f-photo-url'].forEach(id=>{
+  ['f-name','f-birth','f-death','f-birthplace','f-job','f-note','f-phone','f-email','f-facebook'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.value='';
   });
@@ -1126,30 +1126,67 @@ function clearForm(){
   clearPhoto();
 }
 
-function previewPhotoUrl(url) {
+async function handlePhotoFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // Show local preview immediately
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    const img = new Image();
+    img.onload = async () => {
+      // Resize
+      const MAX = 400;
+      const ratio = Math.min(1, MAX / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.round(img.width  * ratio);
+      canvas.height = Math.round(img.height * ratio);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      // Show preview instantly
+      const base64 = canvas.toDataURL('image/jpeg', 0.8);
+      setPhotoPreview(base64);
+      showSaveStatus('⏳ Đang upload ảnh…', '#c9922a');
+
+      // Upload to Firebase Storage if connected
+      if (db && firebase.storage) {
+        try {
+          canvas.toBlob(async blob => {
+            const storageRef = firebase.storage().ref(`photos/${Date.now()}_${file.name}`);
+            const snap = await storageRef.put(blob, { contentType: 'image/jpeg' });
+            const url = await snap.ref.getDownloadURL();
+            setPhotoPreview(url); // replace base64 with Storage URL
+            showSaveStatus('✓ Ảnh đã upload', '#40c060');
+          }, 'image/jpeg', 0.8);
+        } catch(err) {
+          // Keep base64 if Storage fails
+          showSaveStatus('⚠ Dùng ảnh tạm (Storage lỗi)', '#e06060');
+        }
+      }
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function setPhotoPreview(src) {
   const el = document.getElementById('photo-preview');
-  if (!url || !url.startsWith('http')) {
-    el.innerHTML = '👤';
-    el.dataset.photo = '';
-    return;
-  }
-  el.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentElement.innerHTML='❌';this.parentElement.dataset.photo=''">`;
-  el.dataset.photo = url;
+  el.dataset.photo = src;
+  el.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  document.getElementById('btn-clear-photo').style.display = 'inline-block';
 }
 
 function clearPhoto() {
-  document.getElementById('photo-preview').innerHTML = '👤';
-  document.getElementById('photo-preview').dataset.photo = '';
-  const urlInput = document.getElementById('f-photo-url');
-  if (urlInput) urlInput.value = '';
+  const el = document.getElementById('photo-preview');
+  el.dataset.photo = '';
+  el.innerHTML = '👤';
+  document.getElementById('btn-clear-photo').style.display = 'none';
+  document.getElementById('f-photo-file').value = '';
 }
 
 function showPhotoPreview(src) {
-  const el = document.getElementById('photo-preview');
-  el.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-  el.dataset.photo = src;
-  const urlInput = document.getElementById('f-photo-url');
-  if (urlInput) urlInput.value = src;
+  if (src) setPhotoPreview(src);
+  else clearPhoto();
 }
 
 function populateSelects(excludeId){
@@ -1167,9 +1204,7 @@ function populateSelects(excludeId){
 function saveModal(){
   const name=document.getElementById('f-name').value.trim();
   if(!name){alert('Vui lòng nhập họ và tên!');return;}
-  const photoUrl = (document.getElementById('f-photo-url')?.value || '').trim();
-  const photoEl  = document.getElementById('photo-preview');
-  const photo    = photoUrl || photoEl?.dataset?.photo || null;
+  const photo = document.getElementById('photo-preview')?.dataset?.photo || null;
   const data={
     name,
     gender:document.getElementById('f-gender').value,
@@ -1180,7 +1215,7 @@ function saveModal(){
     phone:document.getElementById('f-phone').value.trim()||null,
     email:document.getElementById('f-email').value.trim()||null,
     facebook:document.getElementById('f-facebook').value.trim()||null,
-    photo: photo||null,
+    photo: photo || null,
     parentId:document.getElementById('f-parent').value||null,
     spouseId:document.getElementById('f-spouse').value||null,
     note:document.getElementById('f-note').value.trim()||null,
