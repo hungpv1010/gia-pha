@@ -263,7 +263,8 @@
     border-radius:4px;
     width:min(500px,100%);
     max-height:90vh;
-    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
     transform:translateY(16px);
     transition:transform .2s;
   }
@@ -273,9 +274,11 @@
     color:var(--parchment);
     padding:.8rem 1.1rem;
     display:flex; align-items:center; justify-content:space-between;
+    flex-shrink:0;
   }
   .modal-head h3 { font-family:'Playfair Display',serif; font-size:1.05rem; }
-  .modal-body { padding:1.2rem; }
+  .modal-body { padding:1.2rem; overflow-y:auto; flex:1; }
+  .modal-foot { flex-shrink:0; }
   .form-group { margin-bottom:.9rem; }
   .form-group label {
     display:block; font-size:.85rem;
@@ -552,14 +555,16 @@
 
       <!-- ẢNH ĐẠI DIỆN -->
       <div class="form-group" style="text-align:center;margin-bottom:1rem">
-        <div id="photo-preview" onclick="document.getElementById('f-photo').click()" style="
+        <div id="photo-preview" style="
           width:80px;height:80px;border-radius:50%;border:2px dashed rgba(139,105,20,.5);
-          background:rgba(139,105,20,.08);margin:0 auto .5rem;cursor:pointer;
+          background:rgba(139,105,20,.08);margin:0 auto .5rem;
           display:flex;align-items:center;justify-content:center;overflow:hidden;
-          font-size:1.8rem;color:rgba(139,105,20,.5);transition:border-color .2s">📷</div>
-        <div style="font-size:.78rem;color:var(--sepia);font-style:italic">Nhấn để chọn ảnh</div>
-        <input type="file" id="f-photo" accept="image/*" style="display:none" onchange="previewPhoto(event)">
-        <button type="button" id="f-photo-clear" onclick="clearPhoto()" style="display:none;margin-top:.3rem;font-size:.75rem;color:var(--red);background:none;border:none;cursor:pointer;font-family:inherit">✕ Xóa ảnh</button>
+          font-size:1.8rem;color:rgba(139,105,20,.5)">👤</div>
+        <div style="margin-top:.5rem;display:flex;gap:.4rem;align-items:center;max-width:320px;margin-left:auto;margin-right:auto">
+          <input id="f-photo-url" type="text" placeholder="Dán URL ảnh (https://...)" style="flex:1;font-family:'Cormorant Garamond',serif;font-size:.85rem;padding:.35rem .6rem;border:1px solid rgba(139,105,20,.4);background:rgba(255,255,255,.6);border-radius:2px;outline:none;color:var(--ink)" oninput="previewPhotoUrl(this.value)">
+          <button type="button" onclick="clearPhoto()" style="font-size:.75rem;color:var(--red);background:none;border:1px solid var(--red);border-radius:2px;padding:.3rem .5rem;cursor:pointer;font-family:inherit;white-space:nowrap">✕ Xóa</button>
+        </div>
+        <div style="font-size:.75rem;color:var(--sepia);font-style:italic;margin-top:.3rem">Dán link ảnh từ internet hoặc Google Drive (ảnh công khai)</div>
       </div>
 
       <div class="form-row">
@@ -1113,45 +1118,38 @@ function openEditModal(id){
 }
 
 function clearForm(){
-  ['f-name','f-birth','f-death','f-birthplace','f-job','f-note','f-phone','f-email','f-facebook'].forEach(id=>document.getElementById(id).value='');
+  ['f-name','f-birth','f-death','f-birthplace','f-job','f-note','f-phone','f-email','f-facebook','f-photo-url'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value='';
+  });
   document.getElementById('f-gender').value='male';
   clearPhoto();
 }
 
-function previewPhoto(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  // Resize to max 300px to keep Firestore doc small
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const img = new Image();
-    img.onload = () => {
-      const MAX = 300;
-      const scale = Math.min(1, MAX/Math.max(img.width,img.height));
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width*scale; canvas.height = img.height*scale;
-      canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
-      const data = canvas.toDataURL('image/jpeg', 0.7);
-      showPhotoPreview(data);
-    };
-    img.src = ev.target.result;
-  };
-  reader.readAsDataURL(file);
+function previewPhotoUrl(url) {
+  const el = document.getElementById('photo-preview');
+  if (!url || !url.startsWith('http')) {
+    el.innerHTML = '👤';
+    el.dataset.photo = '';
+    return;
+  }
+  el.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentElement.innerHTML='❌';this.parentElement.dataset.photo=''">`;
+  el.dataset.photo = url;
+}
+
+function clearPhoto() {
+  document.getElementById('photo-preview').innerHTML = '👤';
+  document.getElementById('photo-preview').dataset.photo = '';
+  const urlInput = document.getElementById('f-photo-url');
+  if (urlInput) urlInput.value = '';
 }
 
 function showPhotoPreview(src) {
   const el = document.getElementById('photo-preview');
-  el.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover">`;
+  el.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
   el.dataset.photo = src;
-  document.getElementById('f-photo-clear').style.display = 'inline-block';
-}
-
-function clearPhoto() {
-  const el = document.getElementById('photo-preview');
-  el.innerHTML = '📷';
-  el.dataset.photo = '';
-  document.getElementById('f-photo').value = '';
-  document.getElementById('f-photo-clear').style.display = 'none';
+  const urlInput = document.getElementById('f-photo-url');
+  if (urlInput) urlInput.value = src;
 }
 
 function populateSelects(excludeId){
