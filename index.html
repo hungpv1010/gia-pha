@@ -655,13 +655,38 @@ const SPOUSE_GAP = 12; // gap between husband & wife cards
 function buildTree(data) {
   // ── 1. compute generation ──────────────────────────
   const gen = {};
+  const computing = new Set(); // track in-progress to avoid cycles
+
   function getGen(id) {
     if (gen[id] !== undefined) return gen[id];
+    if (computing.has(id)) return 0; // cycle guard
+    computing.add(id);
+
     const m = data.find(x=>x.id===id);
-    if (!m) return 0;
-    if (!m.parentId) { gen[id]=0; return 0; }
-    const pg = getGen(m.parentId);
-    gen[id] = pg+1; return pg+1;
+    if (!m) { gen[id]=0; computing.delete(id); return 0; }
+
+    // Has parent → generation = parent + 1
+    if (m.parentId) {
+      const pg = getGen(m.parentId);
+      gen[id] = pg + 1;
+      computing.delete(id);
+      return gen[id];
+    }
+
+    // No parent but has spouse who HAS a parent → inherit spouse's gen
+    if (m.spouseId) {
+      const spouse = data.find(x=>x.id===m.spouseId);
+      if (spouse && spouse.parentId) {
+        const sg = getGen(m.spouseId);
+        gen[id] = sg;
+        computing.delete(id);
+        return sg;
+      }
+    }
+
+    gen[id] = 0;
+    computing.delete(id);
+    return 0;
   }
   data.forEach(m=>getGen(m.id));
   const maxGen = Math.max(0,...Object.values(gen));
