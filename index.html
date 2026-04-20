@@ -423,7 +423,7 @@
 <header>
   <div class="title-zh">家譜</div>
   <div class="title-vi">Gia Phả Dòng Họ</div>
-  <div class="clan-name" id="clan-display">Họ Phạm — Làng Đồng Xá</div>
+  <div class="clan-name" id="clan-display">Họ Nguyễn — Làng An Khê</div>
   <div style="margin-top:.7rem;display:flex;gap:.5rem;justify-content:center;align-items:center">
     <button class="admin-badge" id="admin-badge" onclick="toggleAdminLogin()">🔒 Đăng nhập Admin</button>
     <button class="admin-badge admin-only" id="settings-badge" onclick="openSettingsModal()" style="display:none">⚙️ Cài đặt</button>
@@ -1392,15 +1392,14 @@ let unsubscribe = null;
 let saveTimeout = null;
 let isSaving    = false;
 
+// Always use hardcoded config (localStorage only for admin override)
 function getSavedConfig() {
-  // Use hardcoded config — localStorage override only for admin reconfigure
   try {
     const saved = JSON.parse(localStorage.getItem(LS_FB_CONFIG));
     return saved || FIREBASE_CONFIG;
   } catch { return FIREBASE_CONFIG; }
 }
 
-// ── UI status toast ──────────────────────────────
 function showSaveStatus(msg, color='#40c060') {
   let el = document.getElementById('save-status');
   if (!el) {
@@ -1419,11 +1418,6 @@ function showSaveStatus(msg, color='#40c060') {
   el.style.opacity = '1';
   clearTimeout(el._t);
   el._t = setTimeout(() => el.style.opacity = '0', 3000);
-}
-
-// ── Init Firebase from saved config ─────────────
-function getSavedConfig() {
-  try { return JSON.parse(localStorage.getItem(LS_FB_CONFIG)); } catch { return null; }
 }
 
 function initFirebase(cfg) {
@@ -1458,15 +1452,25 @@ function bootFirestore(cfg, resolve, reject) {
 function startListener() {
   if (unsubscribe) unsubscribe();
   const [col, doc] = FIRESTORE_DOC.split('/');
+  console.log('[Firestore] Starting listener on', col, '/', doc);
   unsubscribe = db.collection(col).doc(doc).onSnapshot(snap => {
-    if (!snap.exists) return;
+    if (!snap.exists) {
+      console.log('[Firestore] Document does not exist yet');
+      showSaveStatus('☁ Chưa có dữ liệu trên Firestore', '#c9922a');
+      return;
+    }
     const data = snap.data();
-    if (data.members) {
+    console.log('[Firestore] Received', data?.members?.length, 'members');
+    if (data.members && data.members.length) {
       members = data.members;
       if (data.clan) document.getElementById('clan-display').textContent = data.clan;
+      showSaveStatus('✓ Dữ liệu đã tải từ Firestore', '#40c060');
       render();
     }
-  }, err => showSaveStatus('⚠ Lỗi kết nối: ' + err.message, '#e06060'));
+  }, err => {
+    console.error('[Firestore] Listener error:', err.code, err.message);
+    showSaveStatus('⚠ Lỗi kết nối: ' + (err.code || err.message), '#e06060');
+  });
 }
 
 // ── Save to Firestore (admin only) ───────────────
@@ -1475,39 +1479,42 @@ async function saveToFirestore() {
   isSaving = true;
   showSaveStatus('⏳ Đang lưu…', '#c9922a');
 
-  // Sanitize: remove undefined fields so Firestore accepts them
   const cleanMembers = members.map(m => {
     const obj = {};
     Object.entries(m).forEach(([k,v]) => {
-      if (v !== undefined && v !== '') obj[k] = v;
+      if (v !== undefined && v !== null && v !== '') obj[k] = v;
     });
     return obj;
   });
 
-  // Always save to localStorage as backup
+  // Always backup to localStorage
   try {
     localStorage.setItem('gia-pha-backup', JSON.stringify({
       clan: document.getElementById('clan-display').textContent,
-      members: cleanMembers
+      members: cleanMembers,
+      savedAt: Date.now()
     }));
   } catch(_) {}
 
-  // Save to Firestore if connected
   if (!db) {
-    showSaveStatus('⚠ Chưa kết nối Firebase — đã lưu cục bộ', '#e06060');
+    showSaveStatus('⚠ Firebase chưa kết nối', '#e06060');
     isSaving = false;
     return;
   }
+
   try {
     const [col, doc] = FIRESTORE_DOC.split('/');
+    console.log('[Firestore] Saving', cleanMembers.length, 'members...');
     await db.collection(col).doc(doc).set({
       clan: document.getElementById('clan-display').textContent,
       members: cleanMembers,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    showSaveStatus('✓ Đã lưu — mọi người thấy ngay!', '#40c060');
+    console.log('[Firestore] Saved OK');
+    showSaveStatus('✓ Đã lưu Firestore thành công!', '#40c060');
   } catch(e) {
-    showSaveStatus('⚠ Lưu Firebase thất bại: ' + e.message, '#e06060');
+    console.error('[Firestore] Save error:', e.code, e.message);
+    showSaveStatus('⚠ Lỗi Firestore: ' + (e.code || e.message), '#e06060');
   }
   isSaving = false;
 }
