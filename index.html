@@ -217,7 +217,7 @@
       </div>
       <div class="form-group">
         <label>Mật khẩu khởi tạo</label>
-        <input type="text" id="new-user-pw" placeholder="Tối thiểu 6 ký tự">
+        <input type="password" id="new-user-pw" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password">
       </div>
     </div>
     <div class="modal-foot">
@@ -271,6 +271,42 @@
 </div>
 
 <script>
+// ═══════════════════════════════════════════════════
+//  0. TIỆN ÍCH BẢO MẬT
+// ═══════════════════════════════════════════════════
+
+// Chống XSS: Escape tất cả ký tự đặc biệt HTML trước khi chèn vào DOM
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+// Chỉ cho phép URL ảnh từ Firebase Storage hoặc data URI (canvas resize)
+function isSafePhotoUrl(url) {
+  if (!url) return false;
+  if (url.startsWith('data:image/')) return true; // canvas toDataURL
+  try {
+    const u = new URL(url);
+    return (u.protocol === 'https:') &&
+      (u.hostname.endsWith('firebasestorage.googleapis.com') ||
+       u.hostname.endsWith('storage.googleapis.com'));
+  } catch { return false; }
+}
+
+// Tạo ID ngẫu nhiên an toàn thay vì Date.now()
+function generateId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback cho trình duyệt cũ
+  return 'id_' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+}
+
 // ═══════════════════════════════════════════════════
 //  1. CẤU HÌNH FIREBASE
 // ═══════════════════════════════════════════════════
@@ -338,7 +374,18 @@ auth.onAuthStateChanged(async (user) => {
   }
 });
 
+let loginAttempts = 0;
+let loginLockedUntil = 0;
+
 function doLogin() {
+  const now = Date.now();
+  if (now < loginLockedUntil) {
+    const secs = Math.ceil((loginLockedUntil - now) / 1000);
+    document.getElementById('login-err').style.color = "var(--red)";
+    document.getElementById('login-err').textContent = `✗ Quá nhiều lần thử. Vui lòng đợi ${secs} giây.`;
+    return;
+  }
+
   const email = document.getElementById('login-email').value;
   const pw = document.getElementById('login-pw').value;
   if (!email || !pw) return;
@@ -347,9 +394,17 @@ function doLogin() {
   document.getElementById('login-err').style.color = "var(--gold)";
   
   auth.signInWithEmailAndPassword(email, pw)
+    .then(() => { loginAttempts = 0; }) // Reset sau khi đăng nhập thành công
     .catch(error => {
+      loginAttempts++;
       document.getElementById('login-err').style.color = "var(--red)";
-      document.getElementById('login-err').textContent = "✗ Sai email hoặc mật khẩu!";
+      if (loginAttempts >= 5) {
+        loginLockedUntil = Date.now() + 60000; // Khóa 60 giây
+        loginAttempts = 0;
+        document.getElementById('login-err').textContent = "✗ Quá nhiều lần thử. Vui lòng đợi 60 giây.";
+      } else {
+        document.getElementById('login-err').textContent = "✗ Sai email hoặc mật khẩu!";
+      }
     });
 }
 
@@ -651,9 +706,11 @@ function render(){
     const alive=!m.death; const rx=m.gender==='female'?30:4;
     const stroke=isSelected?'#ffd700':c.stroke;
     const sw=isSelected?3:1.5; const glow=isSelected?' filter="url(#glow)"':'';
-    const yearStr=m.birth?(m.death?`${m.birth}–${m.death}`:`sinh ${m.birth}`):'';
-    const shortName=m.name.length>16?m.name.slice(0,15)+'…':m.name;
-    const hasPhoto = !!m.photo; const nodeH = hasPhoto ? NODE_H + 44 : NODE_H;
+    const yearStr=m.birth?(m.death?`${escapeHTML(m.birth)}–${escapeHTML(m.death)}`:`sinh ${escapeHTML(m.birth)}`):'';
+    const rawName=m.name.length>16?m.name.slice(0,15)+'…':m.name;
+    const shortName=escapeHTML(rawName);
+    const hasPhoto = m.photo && isSafePhotoUrl(m.photo); const nodeH = hasPhoto ? NODE_H + 44 : NODE_H;
+    const safePhotoUrl = hasPhoto ? m.photo : '';
 
     html+=`<g class="node" data-id="${m.id}" style="cursor:pointer;opacity:${opacity}" onclick="selectMember('${m.id}')">
       <rect x="${p.x-NODE_W/2}" y="${p.y}" width="${NODE_W}" height="${nodeH}" rx="${rx}" fill="${c.fill}" stroke="${stroke}" stroke-width="${sw}" filter="url(#shadow)"${glow}/>
@@ -661,7 +718,7 @@ function render(){
       ${hasPhoto?`
         <defs><clipPath id="cp_${m.id}"><circle cx="${p.x}" cy="${p.y+26}" r="20"/></clipPath></defs>
         <circle cx="${p.x}" cy="${p.y+26}" r="22" fill="none" stroke="${stroke}" stroke-width="1.5"/>
-        <image href="${m.photo}" x="${p.x-20}" y="${p.y+6}" width="40" height="40" clip-path="url(#cp_${m.id})" preserveAspectRatio="xMidYMid slice"/>
+        <image href="${safePhotoUrl}" x="${p.x-20}" y="${p.y+6}" width="40" height="40" clip-path="url(#cp_${m.id})" preserveAspectRatio="xMidYMid slice"/>
         <text x="${p.x}" y="${p.y+72}" text-anchor="middle" fill="${c.text}" font-family="Cormorant Garamond,serif" font-size="13" font-weight="600">${shortName}</text>
         <text x="${p.x}" y="${p.y+86}" text-anchor="middle" fill="${c.stroke}" font-family="Cormorant Garamond,serif" font-size="10" font-style="italic">${yearStr}</text>
       `:`
@@ -767,27 +824,32 @@ function openPanel(id){
   const spouse=m.spouseId?members.find(x=>x.id===m.spouseId):null;
   const children=members.filter(x=>x.parentId===id);
   
-  const avatarHTML = m.photo ? `<img src="${m.photo}" style="width:80px;height:80px;border-radius:50%;border:3px solid var(--gold);object-fit:cover;display:block;margin:0 auto .8rem">` : `<div class="avatar-circle">${m.name.split(' ').slice(-2).map(n=>n[0]).join('').toUpperCase()}</div>`;
+  // Validate URL ảnh trước khi hiển thị (chống XSS qua src)
+  const safePhoto = isSafePhotoUrl(m.photo) ? m.photo : null;
+  const avatarHTML = safePhoto
+    ? `<img src="${safePhoto}" style="width:80px;height:80px;border-radius:50%;border:3px solid var(--gold);object-fit:cover;display:block;margin:0 auto .8rem" onerror="this.style.display='none'">`
+    : `<div class="avatar-circle">${escapeHTML(m.name.split(' ').slice(-2).map(n=>n[0]).join('').toUpperCase())}</div>`;
 
   document.getElementById('panel-body').innerHTML=`
     ${avatarHTML}
-    <div class="panel-name">${m.name}</div>
+    <div class="panel-name">${escapeHTML(m.name)}</div>
     <div class="panel-gen">Đời thứ ${g+1} · ${m.gender==='male'?'Nam':'Nữ'} · ${!m.death?'<span style="color:#40c060">Còn sống</span>':'Đã mất'}</div>
-    <div class="info-row"><span class="info-label">Năm sinh</span><span class="info-val">${m.birth||'—'}</span></div>
-    ${m.death?`<div class="info-row"><span class="info-label">Năm mất</span><span class="info-val">${m.death}</span></div>`:''}
-    <div class="info-row"><span class="info-label">Nơi sinh</span><span class="info-val">${m.birthplace||'—'}</span></div>
-    <div class="info-row"><span class="info-label">Nghề nghiệp</span><span class="info-val">${m.job||'—'}</span></div>
-    ${parent?`<div class="info-row"><span class="info-label">Cha/Mẹ</span><span class="info-val" style="cursor:pointer;color:#c99040;text-decoration:underline" onclick="selectMember('${parent.id}')">${parent.name}</span></div>`:''}
-    ${spouse?`<div class="info-row"><span class="info-label">Vợ/Chồng</span><span class="info-val" style="cursor:pointer;color:#c99040;text-decoration:underline" onclick="selectMember('${spouse.id}')">${spouse.name}</span></div>`:''}
-    ${children.length?`<div class="info-row"><span class="info-label">Con cái</span><span class="info-val">${children.map(c=>`<span style="cursor:pointer;color:#c99040;text-decoration:underline" onclick="selectMember('${c.id}')">${c.name}</span>`).join(', ')}</span></div>`:''}
-    ${m.note?`<div class="panel-note">${m.note}</div>`:''}
+    <div class="info-row"><span class="info-label">Năm sinh</span><span class="info-val">${escapeHTML(m.birth)||'—'}</span></div>
+    ${m.death?`<div class="info-row"><span class="info-label">Năm mất</span><span class="info-val">${escapeHTML(m.death)}</span></div>`:''}
+    <div class="info-row"><span class="info-label">Nơi sinh</span><span class="info-val">${escapeHTML(m.birthplace)||'—'}</span></div>
+    <div class="info-row"><span class="info-label">Nghề nghiệp</span><span class="info-val">${escapeHTML(m.job)||'—'}</span></div>
+    ${parent?`<div class="info-row"><span class="info-label">Cha/Mẹ</span><span class="info-val" style="cursor:pointer;color:#c99040;text-decoration:underline" onclick="selectMember('${escapeHTML(parent.id)}')">${escapeHTML(parent.name)}</span></div>`:''}
+    ${spouse?`<div class="info-row"><span class="info-label">Vợ/Chồng</span><span class="info-val" style="cursor:pointer;color:#c99040;text-decoration:underline" onclick="selectMember('${escapeHTML(spouse.id)}')">${escapeHTML(spouse.name)}</span></div>`:''}
+    ${children.length?`<div class="info-row"><span class="info-label">Con cái</span><span class="info-val">${children.map(c=>`<span style="cursor:pointer;color:#c99040;text-decoration:underline" onclick="selectMember('${escapeHTML(c.id)}')">${escapeHTML(c.name)}</span>`).join(', ')}</span></div>`:''}
+    ${m.note?`<div class="panel-note">${escapeHTML(m.note)}</div>`:''}
   `;
 
   // CHỈ HIỂN THỊ NÚT SỬA/XÓA NẾU LÀ ADMIN
+  const safeId = escapeHTML(id);
   document.getElementById('panel-actions').innerHTML = isAdmin ? `
-    <button class="btn" onclick="openEditModal('${id}')">✏ Sửa</button>
-    <button class="btn btn-red" onclick="confirmDelete('${id}')">🗑 Xóa</button>
-    <button class="btn" onclick="openAddModal('${id}')">＋ Thêm con</button>
+    <button class="btn" onclick="openEditModal('${safeId}')">✏ Sửa</button>
+    <button class="btn btn-red" onclick="confirmDelete('${safeId}')">🗑 Xóa</button>
+    <button class="btn" onclick="openAddModal('${safeId}')">＋ Thêm con</button>
   ` : '';
   document.getElementById('side-panel').classList.add('open');
 }
@@ -812,11 +874,11 @@ function clearForm(){ ['name','birth','death','birthplace','job','note','phone',
 function populateSelects(excludeId){
   const ps=document.getElementById('f-parent'); const ss=document.getElementById('f-spouse');
   ps.innerHTML='<option value="">— Không có (gốc) —</option>'; ss.innerHTML='<option value="">— Chưa có —</option>';
-  members.forEach(m=>{ if(m.id===excludeId) return; ps.innerHTML+=`<option value="${m.id}">${m.name} (${m.birth||'?'})</option>`; ss.innerHTML+=`<option value="${m.id}">${m.name} (${m.birth||'?'})</option>`; });
+  members.forEach(m=>{ if(m.id===excludeId) return; const safeId=escapeHTML(m.id); const safeName=escapeHTML(m.name); const safeBirth=escapeHTML(m.birth||'?'); ps.innerHTML+=`<option value="${safeId}">${safeName} (${safeBirth})</option>`; ss.innerHTML+=`<option value="${safeId}">${safeName} (${safeBirth})</option>`; });
 }
 function closeModal(){ document.getElementById('modal-overlay').classList.remove('show'); editingId=null; }
 function confirmDelete(id){
-  if(!isAdmin) return; const m=members.find(x=>x.id===id); if(!confirm(`Xóa thành viên "${m.name}"? Hành động này không thể hoàn tác.`)) return;
+  if(!isAdmin) return; const m=members.find(x=>x.id===id); if(!confirm(`Xóa thành viên "${escapeHTML(m.name)}"? Hành động này không thể hoàn tác.`)) return;
   members.forEach(x=>{ if(x.parentId===id) x.parentId=null; if(x.spouseId===id) x.spouseId=null; }); members=members.filter(x=>x.id!==id);
   closePanel(); render(); scheduleSave();
 }
@@ -832,7 +894,7 @@ function saveModal(){
     const idx=members.findIndex(m=>m.id===editingId); members[idx]={...members[idx],...data};
     if(sId){ const sp=members.find(m=>m.id===sId); if(sp) sp.spouseId=editingId; }
   } else {
-    const id=String(Date.now()); members.push({id,...data});
+    const id=generateId(); members.push({id,...data});
     if(sId){ const sp=members.find(m=>m.id===sId); if(sp) sp.spouseId=id; }
   }
   closeModal(); render(); if(editingId) openPanel(editingId); scheduleSave();
@@ -853,13 +915,25 @@ async function handlePhotoFile(e) {
         canvas.toBlob(async blob => {
           const storageRef = storage.ref(`photos/${Date.now()}_${file.name}`);
           const snap = await storageRef.put(blob, { contentType: 'image/jpeg' });
-          setPhotoPreview(await snap.ref.getDownloadURL()); showSaveStatus('✓ Đã tải ảnh lên an toàn', '#40c060');
+          const downloadUrl = await snap.ref.getDownloadURL();
+          if (!isSafePhotoUrl(downloadUrl)) throw new Error('URL ảnh không hợp lệ');
+          setPhotoPreview(downloadUrl); showSaveStatus('✓ Đã tải ảnh lên an toàn', '#40c060');
         }, 'image/jpeg', 0.8);
       } catch(err) { showSaveStatus('⚠ Lỗi tải ảnh: ' + err.message, '#e06060'); }
     }; img.src = ev.target.result;
   }; reader.readAsDataURL(file);
 }
-function setPhotoPreview(src) { const el = document.getElementById('photo-preview'); el.dataset.photo = src; el.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`; document.getElementById('btn-clear-photo').style.display = 'inline-block'; }
+function setPhotoPreview(src) {
+  if (!isSafePhotoUrl(src)) { showSaveStatus('⚠ URL ảnh không hợp lệ', '#e06060'); return; }
+  const el = document.getElementById('photo-preview');
+  el.dataset.photo = src;
+  const img = document.createElement('img');
+  img.src = src;
+  img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
+  el.innerHTML = '';
+  el.appendChild(img);
+  document.getElementById('btn-clear-photo').style.display = 'inline-block';
+}
 function clearPhoto() { const el = document.getElementById('photo-preview'); el.dataset.photo = ''; el.innerHTML = '👤'; document.getElementById('btn-clear-photo').style.display = 'none'; document.getElementById('f-photo-file').value = ''; }
 </script>
 </body>
