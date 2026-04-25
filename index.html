@@ -841,6 +841,10 @@ function openPanel(id){
     ${parent?`<div class="info-row"><span class="info-label">Cha/Mẹ</span><span class="info-val" style="cursor:pointer;color:#c99040;text-decoration:underline" onclick="selectMember('${escapeHTML(parent.id)}')">${escapeHTML(parent.name)}</span></div>`:''}
     ${spouse?`<div class="info-row"><span class="info-label">Vợ/Chồng</span><span class="info-val" style="cursor:pointer;color:#c99040;text-decoration:underline" onclick="selectMember('${escapeHTML(spouse.id)}')">${escapeHTML(spouse.name)}</span></div>`:''}
     ${children.length?`<div class="info-row"><span class="info-label">Con cái</span><span class="info-val">${children.map(c=>`<span style="cursor:pointer;color:#c99040;text-decoration:underline" onclick="selectMember('${escapeHTML(c.id)}')">${escapeHTML(c.name)}</span>`).join(', ')}</span></div>`:''}
+    ${(m.phone||m.email||m.facebook)?`<div style="font-size:.8rem;color:var(--sepia);letter-spacing:.06em;text-transform:uppercase;margin:.7rem 0 .3rem;border-bottom:1px solid rgba(139,105,20,.2);padding-bottom:.3rem">Liên hệ</div>`:''}
+    ${m.phone?`<div class="info-row"><span class="info-label">📞 Điện thoại</span><span class="info-val"><a href="tel:${escapeHTML(m.phone)}" style="color:var(--ink);text-decoration:none">${escapeHTML(m.phone)}</a></span></div>`:''}
+    ${m.email?`<div class="info-row"><span class="info-label">✉️ Email</span><span class="info-val"><a href="mailto:${escapeHTML(m.email)}" style="color:var(--ink);text-decoration:none">${escapeHTML(m.email)}</a></span></div>`:''}
+    ${m.facebook?`<div class="info-row"><span class="info-label">📘 Facebook</span><span class="info-val"><a href="${escapeHTML(m.facebook).startsWith('http')?escapeHTML(m.facebook):'https://'+escapeHTML(m.facebook)}" target="_blank" rel="noopener noreferrer" style="color:#c99040;text-decoration:underline">${escapeHTML(m.facebook)}</a></span></div>`:''}
     ${m.note?`<div class="panel-note">${escapeHTML(m.note)}</div>`:''}
   `;
 
