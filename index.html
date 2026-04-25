@@ -51,4 +51,728 @@
   /* ── STATS & LEGEND ── */
   .stat { text-align:center; background:rgba(201,146,42,.1); border:1px solid rgba(201,146,42,.25); border-radius:3px; padding:.3rem .9rem; }
   .stat-num { font-family:'Playfair Display',serif; font-size:1.3rem; color:var(--gold); display:block; }
-  .stat-lbl { font-size:.7rem; color:rgba(245,23
+  .stat-lbl { font-size:.7rem; color:rgba(245,234,214,.5); letter-spacing:.07em; text-transform:uppercase; }
+  .legend-item { display:flex; align-items:center; gap:.4rem; font-size:.8rem; color:rgba(245,234,214,.6); letter-spacing:.04em; }
+  .legend-dot { width:14px; height:14px; border-radius:50%; border:2px solid; }
+
+  /* ── MAIN LAYOUT & TREE ── */
+  .main { position:relative; z-index:10; display:flex; gap:0; min-height:calc(100vh - 220px); }
+  .tree-wrapper { flex:1; overflow:auto; position:relative; padding: 2rem; }
+  #tree-svg { display:block; cursor: grab; }
+  #tree-svg:active { cursor: grabbing; }
+
+  /* ── SIDE PANEL ── */
+  .side-panel { width: 320px; flex-shrink:0; background: var(--panel); border-left: 1px solid rgba(201,146,42,.3); display:flex; flex-direction:column; transform: translateX(100%); transition: transform .3s ease; position:relative; }
+  .side-panel.open { transform: translateX(0); }
+  .panel-header { background: var(--sepia); color: var(--parchment); padding: .8rem 1rem; display:flex; align-items:center; justify-content:space-between; }
+  .panel-header h2 { font-family:'Playfair Display',serif; font-size:1.1rem; }
+  .panel-close { background:none; border:none; cursor:pointer; color:var(--parchment); font-size:1.3rem; line-height:1; }
+  .panel-body { flex:1; overflow-y:auto; padding:1.2rem; }
+  .avatar-circle { width:80px; height:80px; border-radius:50%; border:3px solid var(--gold); background:var(--parchment-dark); display:flex; align-items:center; justify-content:center; font-size:2rem; color:var(--sepia); margin: 0 auto .8rem; font-family:'Playfair Display',serif; }
+  .panel-name { text-align:center; font-family:'Playfair Display',serif; font-size:1.35rem; color:var(--ink); margin-bottom:.2rem; }
+  .panel-gen { text-align:center; font-size:.85rem; color:var(--sepia); letter-spacing:.08em; margin-bottom:1rem; }
+  .info-row { display:flex; gap:.5rem; padding:.4rem 0; border-bottom:1px solid rgba(139,105,20,.15); font-size:.9rem; }
+  .info-label { color:var(--sepia); width:90px; flex-shrink:0; font-style:italic; }
+  .info-val { color:var(--ink); flex:1; }
+  .panel-note { margin-top:.8rem; padding:.7rem; background:rgba(139,105,20,.07); border-left:3px solid var(--gold); font-size:.88rem; color:var(--ink); line-height:1.6; font-style:italic; }
+  .panel-actions { padding:.8rem 1.2rem; display:flex; gap:.5rem; flex-wrap:wrap; border-top:1px solid rgba(201,146,42,.2); }
+  
+  /* ── MODALS ── */
+  .modal-overlay { position:fixed; inset:0; z-index:100; background:rgba(0,0,0,.8); display:flex; align-items:center; justify-content:center; padding:1rem; opacity:0; pointer-events:none; transition:opacity .2s; }
+  .modal-overlay.show { opacity:1; pointer-events:all; }
+  .modal { background:var(--parchment); border:1px solid var(--gold); border-radius:4px; width:min(500px,100%); max-height:90vh; display:flex; flex-direction:column; transform:translateY(16px); transition:transform .2s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+  .modal-overlay.show .modal { transform:translateY(0); }
+  .modal-head { background:var(--sepia); color:var(--parchment); padding:.8rem 1.1rem; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .modal-body { padding:1.2rem; overflow-y:auto; flex:1; }
+  .modal-foot { flex-shrink:0; padding:.8rem 1.2rem; display:flex; justify-content:flex-end; gap:.6rem; border-top:1px solid rgba(201,146,42,.2); }
+  .form-group { margin-bottom:.9rem; }
+  .form-group label { display:block; font-size:.85rem; color:var(--sepia); margin-bottom:.3rem; letter-spacing:.05em; }
+  .form-group input, .form-group select, .form-group textarea { width:100%; font-family:'Cormorant Garamond',serif; font-size:.95rem; padding:.4rem .7rem; border:1px solid rgba(139,105,20,.4); background:rgba(255,255,255,.6); border-radius:2px; outline:none; color:var(--ink); transition:border-color .2s; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--gold); }
+  .form-group textarea { resize:vertical; min-height:70px; }
+  .form-row { display:flex; gap:.7rem; }
+  .form-row .form-group { flex:1; }
+
+  /* ── AUTH WRAPPER (MỚI) ── */
+  #auth-wrapper { position: fixed; inset: 0; z-index: 999; background: var(--ink); display: flex; align-items: center; justify-content: center; flex-direction: column; }
+  .auth-box { background: var(--parchment); border: 2px solid var(--gold); padding: 2.5rem; text-align: center; width: min(380px, 90vw); border-radius: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+  .auth-box input { width: 100%; font-family:'Cormorant Garamond',serif; font-size: 1.1rem; padding: 0.6rem; border: 1px solid rgba(139,105,20,.4); background: rgba(255,255,255,.7); outline: none; color: var(--ink); margin-bottom: 1rem; text-align: center; }
+  .auth-box input:focus { border-color: var(--gold); }
+  #app-wrapper { display: none; } /* Ẩn toàn bộ nội dung web cho đến khi đăng nhập */
+  
+  /* ── SCROLLBARS ── */
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:rgba(201,146,42,.4); border-radius:3px; }
+  @media(max-width:640px) {
+    .side-panel { position:fixed; right:0; top:0; bottom:0; z-index:50; }
+    .tree-wrapper { padding:.8rem; }
+  }
+</style>
+</head>
+<body>
+<div class="bg"></div>
+
+<div id="auth-wrapper">
+  <div class="auth-box">
+    <h1 style="font-family:'Playfair Display',serif; color:var(--sepia); margin-bottom: 0.5rem; font-size: 2.5rem;">家譜</h1>
+    <h2 style="font-family:'Cormorant Garamond',serif; color:var(--ink); margin-bottom: 0.5rem; font-size: 1.2rem; text-transform: uppercase; letter-spacing: .2em;">Gia Phả Dòng Họ</h2>
+    <p style="color:var(--sepia); margin-bottom: 1.5rem; font-size: 0.9rem; font-style:italic;">Hệ thống nội bộ. Vui lòng xác thực.</p>
+    <input type="email" id="login-email" placeholder="Email đăng nhập">
+    <input type="password" id="login-pw" placeholder="Mật khẩu" onkeydown="if(event.key==='Enter') doLogin()">
+    <div id="login-err" style="color:var(--red); font-size:0.9rem; margin-bottom: 1rem; min-height: 1.2em;"></div>
+    <button class="btn active" style="width: 100%; font-size: 1.1rem; padding: 0.6rem;" onclick="doLogin()">Tiến vào Gia Phả</button>
+  </div>
+</div>
+
+<div id="app-wrapper">
+  <header>
+    <div class="title-zh">家譜</div>
+    <div class="title-vi">Gia Phả Dòng Họ</div>
+    <div class="clan-name" id="clan-display">Đang tải dữ liệu...</div>
+    <div style="margin-top:.7rem;display:flex;gap:.5rem;justify-content:center;align-items:center">
+      <span id="user-info" style="color:var(--gold-light); font-size: 0.9rem; letter-spacing: 0.05em; margin-right: 0.5rem;"></span>
+      <button class="btn btn-red" onclick="doLogout()" style="padding: 0.2rem 0.8rem; font-size: 0.8rem;">Đăng xuất</button>
+    </div>
+  </header>
+
+  <div class="stats-bar" id="stats-bar"></div>
+
+  <div class="toolbar">
+    <button class="btn" onclick="zoomIn()">＋ Phóng to</button>
+    <button class="btn" onclick="zoomOut()">－ Thu nhỏ</button>
+    <button class="btn" onclick="resetView()">⟳ Mặc định</button>
+    <button class="btn admin-only" onclick="openAddModal(null)" style="display:none">＋ Thêm thành viên</button>
+    <button class="btn admin-only" onclick="openCreateUserModal()" style="display:none">👥 Cấp tài khoản xem</button>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" id="search" placeholder="🔍 Tìm kiếm thành viên..." oninput="handleSearch(this.value)">
+  </div>
+
+  <div class="legend" id="gen-legend"></div>
+
+  <div class="main">
+    <div class="tree-wrapper" id="tree-wrapper">
+      <svg id="tree-svg"></svg>
+    </div>
+    <div class="side-panel" id="side-panel">
+      <div class="panel-header">
+        <h2>Thông tin thành viên</h2>
+        <button class="panel-close" onclick="closePanel()">✕</button>
+      </div>
+      <div class="panel-body" id="panel-body"></div>
+      <div class="panel-actions" id="panel-actions"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="create-user-modal">
+  <div class="modal" style="width: min(400px, 95vw);">
+    <div class="modal-head">
+      <h3>Cấp tài khoản cho con cháu</h3>
+      <button class="panel-close" onclick="closeCreateUserModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size: 0.85rem; color: var(--sepia); margin-bottom: 1rem; line-height: 1.5;">Tài khoản được tạo ở đây có quyền <b>XEM</b> toàn bộ gia phả, nhưng không thể Thêm/Sửa/Xóa dữ liệu.</p>
+      <div class="form-group">
+        <label>Email đăng nhập</label>
+        <input type="email" id="new-user-email" placeholder="email@gmail.com">
+      </div>
+      <div class="form-group">
+        <label>Mật khẩu khởi tạo</label>
+        <input type="text" id="new-user-pw" placeholder="Tối thiểu 6 ký tự">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeCreateUserModal()">Hủy</button>
+      <button class="btn active" onclick="createMemberAccount()">Tạo tài khoản</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-title">Thêm thành viên</h3>
+      <button class="panel-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" style="text-align:center;margin-bottom:1rem">
+        <input type="file" id="f-photo-file" accept="image/*" style="display:none" onchange="handlePhotoFile(event)">
+        <div id="photo-preview" onclick="document.getElementById('f-photo-file').click()" style="width:90px;height:90px;border-radius:50%;border:2px dashed rgba(139,105,20,.6);background:rgba(139,105,20,.08);margin:0 auto .4rem;cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:2rem;color:rgba(139,105,20,.5);transition:all .2s;position:relative" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='rgba(139,105,20,.6)'">👤</div>
+        <div style="font-size:.78rem;color:var(--sepia);font-style:italic;margin-bottom:.3rem">Nhấn vào avatar để chọn ảnh</div>
+        <button type="button" id="btn-clear-photo" onclick="clearPhoto()" style="display:none;font-size:.75rem;color:var(--red);background:none;border:1px solid var(--red);border-radius:2px;padding:.25rem .6rem;cursor:pointer;font-family:inherit">✕ Xóa ảnh</button>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group"><label>Họ và tên *</label><input id="f-name" type="text" placeholder="Nguyễn Văn A"></div>
+        <div class="form-group" style="max-width:110px"><label>Giới tính</label><select id="f-gender"><option value="male">Nam</option><option value="female">Nữ</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Năm sinh</label><input id="f-birth" type="text" placeholder="1950"></div>
+        <div class="form-group"><label>Năm mất</label><input id="f-death" type="text" placeholder="(còn sống)"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Nơi sinh</label><input id="f-birthplace" type="text" placeholder="Làng An Khê, Nghệ An"></div>
+        <div class="form-group"><label>Nghề nghiệp</label><input id="f-job" type="text" placeholder="Nông dân, Nhà giáo…"></div>
+      </div>
+      <div style="font-size:.8rem;color:var(--sepia);letter-spacing:.06em;text-transform:uppercase;margin:.6rem 0 .4rem;border-bottom:1px solid rgba(139,105,20,.2);padding-bottom:.3rem">Liên hệ</div>
+      <div class="form-row">
+        <div class="form-group"><label>📞 Điện thoại</label><input id="f-phone" type="text" placeholder="0912 345 678"></div>
+        <div class="form-group"><label>✉️ Email</label><input id="f-email" type="text" placeholder="ten@email.com"></div>
+      </div>
+      <div class="form-group"><label>📘 Facebook</label><input id="f-facebook" type="text" placeholder="facebook.com/ten hoặc tên hiển thị"></div>
+      <div class="form-group"><label>Cha/Mẹ (chọn)</label><select id="f-parent"><option value="">— Không có (gốc) —</option></select></div>
+      <div class="form-group"><label>Vợ/Chồng (chọn)</label><select id="f-spouse"><option value="">— Chưa có —</option></select></div>
+      <div class="form-group"><label>Ghi chú / tiểu sử ngắn</label><textarea id="f-note" placeholder="Thông tin thêm về thành viên này…"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal()">Hủy</button>
+      <button class="btn active" onclick="saveModal()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  1. CẤU HÌNH FIREBASE
+// ═══════════════════════════════════════════════════
+// QUAN TRỌNG: Hãy điền thông số thật của bạn vào đây!
+const FIREBASE_CONFIG = { 
+  apiKey : "AIzaSyAcPu0LrUgWtCnVtnBjXv3doZkhXDOIjgQ" , 
+  authDomain : "giapha-c5071.firebaseapp.com" , 
+  projectId : "giapha-c5071" , 
+  storageBucket : "giapha-c5071.firebasestorage.app" , 
+  messagingSenderId : "793366226133" , 
+  appId : "1:793366226133:web:49e89d71c65b69e8e36e5c" 
+};
+
+// Khởi tạo App Chính
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+// Khởi tạo App Phụ (Dùng để Admin tạo tài khoản mà không bị đăng xuất)
+const secondaryApp = firebase.initializeApp(FIREBASE_CONFIG, "Secondary");
+
+// ═══════════════════════════════════════════════════
+//  2. QUẢN LÝ TRẠNG THÁI & PHÂN QUYỀN (RBAC)
+// ═══════════════════════════════════════════════════
+let isAdmin = false;
+let currentUser = null;
+let members = [];
+let unsubscribeData = null;
+let saveTimeout = null;
+let isSaving = false;
+
+// Lắng nghe trạng thái đăng nhập
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    currentUser = user;
+    document.getElementById('auth-wrapper').style.display = 'none';
+    document.getElementById('app-wrapper').style.display = 'block';
+    
+    // Kiểm tra quyền (Role) từ Firestore
+    try {
+      const doc = await db.collection('users').doc(user.uid).get();
+      if (doc.exists && doc.data().role === 'admin') {
+        isAdmin = true;
+        document.getElementById('user-info').innerHTML = `👑 Admin: <b>${user.email}</b>`;
+      } else {
+        isAdmin = false;
+        document.getElementById('user-info').innerHTML = `👁 Người xem: <b>${user.email}</b>`;
+      }
+    } catch (e) {
+      console.error("Lỗi lấy quyền:", e);
+      isAdmin = false; // Mặc định an toàn: Chỉ cho xem nếu có lỗi
+      document.getElementById('user-info').innerHTML = `👁 Người xem: <b>${user.email}</b>`;
+    }
+
+    updateUIBasedOnRole();
+    startRealtimeSync(); 
+  } else {
+    // Chưa đăng nhập hoặc vừa đăng xuất
+    currentUser = null;
+    isAdmin = false;
+    document.getElementById('auth-wrapper').style.display = 'flex';
+    document.getElementById('app-wrapper').style.display = 'none';
+    if(unsubscribeData) unsubscribeData(); // Dừng tải dữ liệu
+  }
+});
+
+function doLogin() {
+  const email = document.getElementById('login-email').value;
+  const pw = document.getElementById('login-pw').value;
+  if (!email || !pw) return;
+  
+  document.getElementById('login-err').textContent = "Đang kết nối an toàn...";
+  document.getElementById('login-err').style.color = "var(--gold)";
+  
+  auth.signInWithEmailAndPassword(email, pw)
+    .catch(error => {
+      document.getElementById('login-err').style.color = "var(--red)";
+      document.getElementById('login-err').textContent = "✗ Sai email hoặc mật khẩu!";
+    });
+}
+
+function doLogout() {
+  if(confirm("Bạn có chắc chắn muốn rời khỏi Gia Phả?")) {
+    auth.signOut();
+  }
+}
+
+function updateUIBasedOnRole() {
+  // Hiện/Ẩn các nút thêm, xóa, sửa dựa trên role
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = isAdmin ? 'inline-block' : 'none';
+  });
+  if (selectedId) openPanel(selectedId); // Render lại panel đang mở
+}
+
+// ═══════════════════════════════════════════════════
+//  3. CHỨC NĂNG ADMIN TẠO TÀI KHOẢN (APP PHỤ)
+// ═══════════════════════════════════════════════════
+function openCreateUserModal() {
+  document.getElementById('new-user-email').value = '';
+  document.getElementById('new-user-pw').value = '';
+  document.getElementById('create-user-modal').classList.add('show');
+}
+function closeCreateUserModal() { document.getElementById('create-user-modal').classList.remove('show'); }
+
+async function createMemberAccount() {
+  if (!isAdmin) return;
+  const email = document.getElementById('new-user-email').value.trim();
+  const pw = document.getElementById('new-user-pw').value.trim();
+  if(!email || !pw) { alert("Vui lòng nhập đủ thông tin!"); return; }
+
+  const btn = document.querySelector('#create-user-modal .btn.active');
+  btn.textContent = 'Đang tạo...'; btn.disabled = true;
+
+  try {
+    // Dùng app phụ để tạo user (không làm mất session admin)
+    const cred = await secondaryApp.auth().createUserWithEmailAndPassword(email, pw);
+    
+    // Lưu role 'member' vào database bằng app chính (đang là admin)
+    await db.collection('users').doc(cred.user.uid).set({
+      email: email,
+      role: 'member',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    await secondaryApp.auth().signOut();
+    alert("Cấp tài khoản cho con cháu thành công!");
+    closeCreateUserModal();
+  } catch(e) {
+    alert("Lỗi tạo tài khoản: " + e.message);
+  } finally {
+    btn.textContent = 'Tạo tài khoản'; btn.disabled = false;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  4. ĐỒNG BỘ DỮ LIỆU FIRESTORE
+// ═══════════════════════════════════════════════════
+function showSaveStatus(msg, color='#40c060') {
+  let el = document.getElementById('save-status');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'save-status';
+    el.style.cssText = `position:fixed;bottom:1.2rem;right:1.2rem;z-index:500;
+      font-family:'Cormorant Garamond',serif;font-size:.9rem;letter-spacing:.05em;
+      padding:.45rem 1.1rem;border-radius:3px;border:1px solid;
+      transition:opacity .5s;pointer-events:none;`;
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.background = 'rgba(26,15,0,.95)'; el.style.color = color; el.style.borderColor = color;
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.style.opacity = '0', 3000);
+}
+
+function startRealtimeSync() {
+  if (unsubscribeData) unsubscribeData();
+  const docRef = db.collection('gia-pha').doc('data');
+  
+  unsubscribeData = docRef.onSnapshot(snap => {
+    if (snap.exists) {
+      const data = snap.data();
+      members = data.members || [];
+      if (data.clan) document.getElementById('clan-display').textContent = data.clan;
+      render();
+      showSaveStatus('✓ Đã đồng bộ từ máy chủ', '#40c060');
+    } else {
+      members = [];
+      document.getElementById('clan-display').textContent = "Họ... — Làng...";
+      render();
+      if(isAdmin) saveToFirestore(); // Ghi file rỗng nếu chưa có
+    }
+  }, error => {
+    console.error("Lỗi quyền đọc dữ liệu:", error);
+    showSaveStatus('⚠ Không có quyền tải dữ liệu (Lỗi Rule)', '#e06060');
+  });
+}
+
+async function saveToFirestore() {
+  if (!isAdmin || isSaving) return;
+  isSaving = true;
+  showSaveStatus('⏳ Đang cập nhật lên máy chủ...', '#c9922a');
+
+  // Làm sạch dữ liệu trước khi lưu
+  const cleanMembers = members.map(m => {
+    const obj = {};
+    Object.entries(m).forEach(([k,v]) => {
+      if (v !== undefined && v !== null && v !== '') obj[k] = v;
+    });
+    return obj;
+  });
+
+  try {
+    await db.collection('gia-pha').doc('data').set({
+      clan: document.getElementById('clan-display').textContent,
+      members: cleanMembers,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showSaveStatus('✓ Đã lưu thay đổi an toàn', '#40c060');
+  } catch(e) {
+    showSaveStatus('⚠ Lỗi lưu dữ liệu: ' + e.message, '#e06060');
+  }
+  isSaving = false;
+}
+
+function scheduleSave() {
+  if(!isAdmin) return;
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(saveToFirestore, 1000);
+}
+
+// ═══════════════════════════════════════════════════
+//  5. THUẬT TOÁN VẼ CÂY GIA PHẢ (SVG ENGINE)
+// ═══════════════════════════════════════════════════
+let editingId = null;
+const GEN_COLORS = [
+  { fill:'#7a1a1a', stroke:'#c94040', text:'#ffeaea' }, { fill:'#1a4a2a', stroke:'#40a060', text:'#e8ffee' },
+  { fill:'#1a2a5a', stroke:'#4060c9', text:'#e8eeff' }, { fill:'#5a3a1a', stroke:'#c98030', text:'#fff4e0' },
+  { fill:'#3a1a5a', stroke:'#8040c9', text:'#f4e8ff' }, { fill:'#1a4a4a', stroke:'#40a0a0', text:'#e8ffff' },
+];
+
+const NODE_W = 148, NODE_H = 64, H_GAP = 36, V_GAP = 110;
+const SPOUSE_GAP = 12;
+
+function buildTree(data) {
+  const gen = {}; const computing = new Set();
+  function getGen(id) {
+    if (gen[id] !== undefined) return gen[id];
+    if (computing.has(id)) return 0; computing.add(id);
+    const m = data.find(x=>x.id===id);
+    if (!m) { gen[id]=0; computing.delete(id); return 0; }
+    if (m.parentId) { const pg = getGen(m.parentId); gen[id] = pg + 1; computing.delete(id); return gen[id]; }
+    if (m.spouseId) {
+      const spouse = data.find(x=>x.id===m.spouseId);
+      if (spouse && spouse.parentId) { const sg = getGen(m.spouseId); gen[id] = sg; computing.delete(id); return sg; }
+    }
+    gen[id] = 0; computing.delete(id); return 0;
+  }
+  data.forEach(m=>getGen(m.id));
+  const maxGen = Math.max(0,...Object.values(gen));
+
+  const unitMap = {}; const units = []; const spousePairsSeen = new Set();
+  data.forEach(m => {
+    if (unitMap[m.id]) return;
+    let unitMembers = [m.id];
+    if (m.spouseId && data.find(x=>x.id===m.spouseId)) {
+      const key = [m.id,m.spouseId].sort().join('-');
+      if (!spousePairsSeen.has(key)) {
+        spousePairsSeen.add(key);
+        unitMembers = m.gender==='male' ? [m.id, m.spouseId] : [m.spouseId, m.id];
+      } else return;
+    }
+    const uid = 'u_'+unitMembers[0];
+    units.push({ id:uid, members:unitMembers });
+    unitMembers.forEach(mid => unitMap[mid] = uid);
+  });
+
+  units.forEach(u => {
+    const primary = data.find(x=>x.id===u.members[0]);
+    u.parentUnitId = (primary && primary.parentId) ? (unitMap[primary.parentId] || null) : null;
+  });
+
+  const unitById = {}; units.forEach(u => unitById[u.id]=u);
+  function unitWidth(u) {
+    if (u._w !== undefined) return u._w;
+    const children = units.filter(x=>x.parentUnitId===u.id);
+    const selfW = u.members.length===2 ? NODE_W*2 + SPOUSE_GAP : NODE_W;
+    if (!children.length) { u._w = selfW; return selfW; }
+    const childTotal = children.reduce((s,c)=>s+unitWidth(c),0) + (children.length-1)*H_GAP;
+    u._w = Math.max(selfW, childTotal); return u._w;
+  }
+  units.forEach(u=>unitWidth(u));
+
+  const unitPos = {};
+  function placeUnit(u, cx, gy) {
+    unitPos[u.id] = { x:cx, y: gy*(NODE_H+V_GAP) };
+    const children = units.filter(x=>x.parentUnitId===u.id);
+    if (!children.length) return;
+    const totalChildW = children.reduce((s,c)=>s+unitWidth(c),0) + (children.length-1)*H_GAP;
+    let startX = cx - totalChildW/2;
+    children.forEach(c => {
+      const cw = unitWidth(c);
+      placeUnit(c, startX + cw/2, gy+1); startX += cw + H_GAP;
+    });
+  }
+
+  const roots = units.filter(u=>!u.parentUnitId);
+  const totalRootW = roots.reduce((s,r)=>s+unitWidth(r),0) + (roots.length-1)*H_GAP;
+  let rx = -totalRootW/2;
+  roots.forEach(r => { placeUnit(r, rx + unitWidth(r)/2, 0); rx += unitWidth(r) + H_GAP; });
+
+  const pos = {};
+  units.forEach(u => {
+    const up = unitPos[u.id]; if (!up) return;
+    if (u.members.length === 2) {
+      pos[u.members[0]] = { x: up.x - NODE_W/2 - SPOUSE_GAP/2, y: up.y };
+      pos[u.members[1]] = { x: up.x + NODE_W/2 + SPOUSE_GAP/2, y: up.y };
+    } else { pos[u.members[0]] = { x: up.x, y: up.y }; }
+  });
+  return {pos, gen, maxGen, units, unitPos};
+}
+
+let scale=1, panX=0, panY=0;
+let isPanning=false, startPX=0, startPY=0;
+let selectedId=null;
+let searchTerm='';
+
+function render(){
+  if(!document.getElementById('tree-svg')) return;
+  const svg=document.getElementById('tree-svg');
+  const filtered = searchTerm ? members.filter(m=>m.name.toLowerCase().includes(searchTerm.toLowerCase())) : members;
+  const displayIds = new Set(filtered.map(m=>m.id));
+  const {pos,gen,maxGen,units,unitPos} = buildTree(members);
+
+  if(members.length === 0) { svg.innerHTML = ''; return; }
+
+  const xs=Object.values(pos).map(p=>p.x); const ys=Object.values(pos).map(p=>p.y);
+  const minX=Math.min(...xs)-NODE_W/2-40; const minY=Math.min(...ys)-40;
+  const maxX=Math.max(...xs)+NODE_W/2+40; const maxY=Math.max(...ys)+NODE_H+40;
+  const W=maxX-minX, H=maxY-minY;
+
+  svg.setAttribute('width',W); svg.setAttribute('height',H);
+  svg.setAttribute('viewBox',`${minX} ${minY} ${W} ${H}`);
+
+  let html=`<defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="shadow"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="rgba(0,0,0,.4)"/></filter>
+  </defs>`;
+
+  const spousePairs=new Set();
+  members.forEach(m=>{
+    if(!m.spouseId) return;
+    const key=[m.id,m.spouseId].sort().join('-');
+    if(spousePairs.has(key)) return; spousePairs.add(key);
+    const p1=pos[m.id], p2=pos[m.spouseId]; if(!p1||!p2) return;
+    const dim=!displayIds.has(m.id)&&searchTerm;
+    const col=dim?'rgba(180,60,60,.1)':'rgba(200,80,80,.7)';
+    const tcol=dim?'rgba(200,80,80,.1)':'rgba(220,100,100,.9)';
+    const x1=Math.min(p1.x,p2.x)+NODE_W/2, x2=Math.max(p1.x,p2.x)-NODE_W/2;
+    const y=p1.y+NODE_H/2, mx=(x1+x2)/2;
+    html+=`<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${col}" stroke-width="2"/><text x="${mx}" y="${y+5}" text-anchor="middle" fill="${tcol}" font-size="11">♥</text>`;
+  });
+
+  const childrenByUnit = {};
+  units.forEach(u => { if (!u.parentUnitId) return; (childrenByUnit[u.parentUnitId] || (childrenByUnit[u.parentUnitId]=[])).push(u); });
+
+  Object.entries(childrenByUnit).forEach(([puid, childUnits]) => {
+    const pup = unitPos[puid]; if (!pup) return;
+    const pUnit = units.find(u=>u.id===puid);
+    const pMember = members.find(x=>x.id===pUnit.members[0]);
+    const pNodeH = pMember && pMember.photo ? NODE_H + 44 : NODE_H;
+    const fromX = pup.x, fromY = pup.y + pNodeH;
+    const firstChild = childUnits[0];
+    const childY = unitPos[firstChild.id]?.y ?? (pup.y + NODE_H + V_GAP);
+    const midY = fromY + (childY - fromY) * 0.5;
+    const dim = !displayIds.has(pUnit.members[0]) && searchTerm;
+    const col = dim ? 'rgba(201,146,42,.08)' : 'rgba(201,146,42,.55)';
+    const sw = 1.8;
+
+    html+=`<line x1="${fromX}" y1="${fromY}" x2="${fromX}" y2="${midY}" stroke="${col}" stroke-width="${sw}"/>`;
+    if (childUnits.length === 1) {
+      const cup = unitPos[childUnits[0].id]; if (!cup) return;
+      html+=`<line x1="${fromX}" y1="${midY}" x2="${cup.x}" y2="${midY}" stroke="${col}" stroke-width="${sw}"/><line x1="${cup.x}" y1="${midY}" x2="${cup.x}" y2="${cup.y}" stroke="${col}" stroke-width="${sw}"/>`;
+    } else {
+      const childXs = childUnits.map(cu => unitPos[cu.id]?.x).filter(Boolean);
+      html+=`<line x1="${Math.min(...childXs)}" y1="${midY}" x2="${Math.max(...childXs)}" y2="${midY}" stroke="${col}" stroke-width="${sw}"/><line x1="${fromX}" y1="${midY}" x2="${fromX}" y2="${midY}" stroke="${col}" stroke-width="${sw}"/>`;
+      childUnits.forEach(cu => { const cup = unitPos[cu.id]; if(cup) html+=`<line x1="${cup.x}" y1="${midY}" x2="${cup.x}" y2="${cup.y}" stroke="${col}" stroke-width="${sw}"/>`; });
+    }
+  });
+
+  members.forEach(m=>{
+    const p=pos[m.id]; if(!p) return;
+    const g=gen[m.id]||0; const c=GEN_COLORS[g%GEN_COLORS.length];
+    const isSelected=m.id===selectedId;
+    const opacity=(!displayIds.has(m.id)&&searchTerm)?0.2:1;
+    const alive=!m.death; const rx=m.gender==='female'?30:4;
+    const stroke=isSelected?'#ffd700':c.stroke;
+    const sw=isSelected?3:1.5; const glow=isSelected?' filter="url(#glow)"':'';
+    const yearStr=m.birth?(m.death?`${m.birth}–${m.death}`:`sinh ${m.birth}`):'';
+    const shortName=m.name.length>16?m.name.slice(0,15)+'…':m.name;
+    const hasPhoto = !!m.photo; const nodeH = hasPhoto ? NODE_H + 44 : NODE_H;
+
+    html+=`<g class="node" data-id="${m.id}" style="cursor:pointer;opacity:${opacity}" onclick="selectMember('${m.id}')">
+      <rect x="${p.x-NODE_W/2}" y="${p.y}" width="${NODE_W}" height="${nodeH}" rx="${rx}" fill="${c.fill}" stroke="${stroke}" stroke-width="${sw}" filter="url(#shadow)"${glow}/>
+      ${alive?`<circle cx="${p.x+NODE_W/2-8}" cy="${p.y+8}" r="4" fill="#40c060"/>`:``}
+      ${hasPhoto?`
+        <defs><clipPath id="cp_${m.id}"><circle cx="${p.x}" cy="${p.y+26}" r="20"/></clipPath></defs>
+        <circle cx="${p.x}" cy="${p.y+26}" r="22" fill="none" stroke="${stroke}" stroke-width="1.5"/>
+        <image href="${m.photo}" x="${p.x-20}" y="${p.y+6}" width="40" height="40" clip-path="url(#cp_${m.id})" preserveAspectRatio="xMidYMid slice"/>
+        <text x="${p.x}" y="${p.y+72}" text-anchor="middle" fill="${c.text}" font-family="Cormorant Garamond,serif" font-size="13" font-weight="600">${shortName}</text>
+        <text x="${p.x}" y="${p.y+86}" text-anchor="middle" fill="${c.stroke}" font-family="Cormorant Garamond,serif" font-size="10" font-style="italic">${yearStr}</text>
+      `:`
+        <text x="${p.x}" y="${p.y+22}" text-anchor="middle" fill="${c.text}" font-family="Cormorant Garamond,serif" font-size="13" font-weight="600">${shortName}</text>
+        <text x="${p.x}" y="${p.y+38}" text-anchor="middle" fill="${c.stroke}" font-family="Cormorant Garamond,serif" font-size="10" font-style="italic">${yearStr}</text>
+        <text x="${p.x}" y="${p.y+52}" text-anchor="middle" fill="rgba(255,255,255,.35)" font-family="Cormorant Garamond,serif" font-size="9">Đời ${g+1}</text>
+      `}
+    </g>`;
+  });
+
+  svg.innerHTML=html;
+  setupDrag(); applyTransform(); renderStats(gen,maxGen); renderLegend(maxGen);
+}
+
+function applyTransform(){ document.getElementById('tree-svg').style.transform=`translate(${panX}px,${panY}px) scale(${scale})`; }
+function setupDrag(){
+  const wrapper=document.getElementById('tree-wrapper');
+  wrapper.onmousedown=e=>{ if(e.target.closest('.node')) return; isPanning=true; startPX=e.clientX-panX; startPY=e.clientY-panY; };
+  wrapper.onmousemove=e=>{ if(!isPanning) return; panX=e.clientX-startPX; panY=e.clientY-startPY; applyTransform(); };
+  wrapper.onmouseup=()=>isPanning=false; wrapper.onmouseleave=()=>isPanning=false;
+}
+function zoomIn(){ scale=Math.min(scale*1.2,3); applyTransform(); }
+function zoomOut(){ scale=Math.max(scale/1.2,.2); applyTransform(); }
+function resetView(){ scale=1; panX=0; panY=0; applyTransform(); }
+document.getElementById('tree-wrapper').addEventListener('wheel',e=>{ e.preventDefault(); if(e.deltaY<0) zoomIn(); else zoomOut(); },{passive:false});
+
+// ═══════════════════════════════════════════════════
+//  6. TƯƠNG TÁC UI (PANEL, MODAL)
+// ═══════════════════════════════════════════════════
+function selectMember(id){ selectedId=id; render(); openPanel(id); }
+function handleSearch(val){ searchTerm=val; render(); }
+
+function renderStats(gen,maxGen){
+  document.getElementById('stats-bar').innerHTML=`
+    <div class="stat"><span class="stat-num">${members.length}</span><span class="stat-lbl">Thành viên</span></div>
+    <div class="stat"><span class="stat-num">${members.filter(m=>!m.death).length}</span><span class="stat-lbl">Còn sống</span></div>
+    <div class="stat"><span class="stat-num">${maxGen+1}</span><span class="stat-lbl">Đời</span></div>
+    <div class="stat"><span class="stat-num">${members.filter(m=>m.gender==='male').length}</span><span class="stat-lbl">Nam</span></div>
+    <div class="stat"><span class="stat-num">${members.filter(m=>m.gender==='female').length}</span><span class="stat-lbl">Nữ</span></div>
+  `;
+}
+function renderLegend(maxGen){
+  let html=''; for(let g=0;g<=maxGen;g++){ const c=GEN_COLORS[g%GEN_COLORS.length]; html+=`<div class="legend-item"><div class="legend-dot" style="background:${c.fill};border-color:${c.stroke}"></div>Đời ${g+1}</div>`; }
+  document.getElementById('gen-legend').innerHTML=html;
+}
+
+function openPanel(id){
+  const m=members.find(x=>x.id===id); if(!m) return;
+  const {gen} = buildTree(members); const g = gen[id]||0;
+  const parent=m.parentId?members.find(x=>x.id===m.parentId):null;
+  const spouse=m.spouseId?members.find(x=>x.id===m.spouseId):null;
+  const children=members.filter(x=>x.parentId===id);
+  
+  const avatarHTML = m.photo ? `<img src="${m.photo}" style="width:80px;height:80px;border-radius:50%;border:3px solid var(--gold);object-fit:cover;display:block;margin:0 auto .8rem">` : `<div class="avatar-circle">${m.name.split(' ').slice(-2).map(n=>n[0]).join('').toUpperCase()}</div>`;
+
+  document.getElementById('panel-body').innerHTML=`
+    ${avatarHTML}
+    <div class="panel-name">${m.name}</div>
+    <div class="panel-gen">Đời thứ ${g+1} · ${m.gender==='male'?'Nam':'Nữ'} · ${!m.death?'<span style="color:#40c060">Còn sống</span>':'Đã mất'}</div>
+    <div class="info-row"><span class="info-label">Năm sinh</span><span class="info-val">${m.birth||'—'}</span></div>
+    ${m.death?`<div class="info-row"><span class="info-label">Năm mất</span><span class="info-val">${m.death}</span></div>`:''}
+    <div class="info-row"><span class="info-label">Nơi sinh</span><span class="info-val">${m.birthplace||'—'}</span></div>
+    <div class="info-row"><span class="info-label">Nghề nghiệp</span><span class="info-val">${m.job||'—'}</span></div>
+    ${parent?`<div class="info-row"><span class="info-label">Cha/Mẹ</span><span class="info-val" style="cursor:pointer;color:#c99040;text-decoration:underline" onclick="selectMember('${parent.id}')">${parent.name}</span></div>`:''}
+    ${spouse?`<div class="info-row"><span class="info-label">Vợ/Chồng</span><span class="info-val" style="cursor:pointer;color:#c99040;text-decoration:underline" onclick="selectMember('${spouse.id}')">${spouse.name}</span></div>`:''}
+    ${children.length?`<div class="info-row"><span class="info-label">Con cái</span><span class="info-val">${children.map(c=>`<span style="cursor:pointer;color:#c99040;text-decoration:underline" onclick="selectMember('${c.id}')">${c.name}</span>`).join(', ')}</span></div>`:''}
+    ${m.note?`<div class="panel-note">${m.note}</div>`:''}
+  `;
+
+  // CHỈ HIỂN THỊ NÚT SỬA/XÓA NẾU LÀ ADMIN
+  document.getElementById('panel-actions').innerHTML = isAdmin ? `
+    <button class="btn" onclick="openEditModal('${id}')">✏ Sửa</button>
+    <button class="btn btn-red" onclick="confirmDelete('${id}')">🗑 Xóa</button>
+    <button class="btn" onclick="openAddModal('${id}')">＋ Thêm con</button>
+  ` : '';
+  document.getElementById('side-panel').classList.add('open');
+}
+function closePanel(){ document.getElementById('side-panel').classList.remove('open'); selectedId=null; render(); }
+
+// CHỨC NĂNG THÊM/SỬA/XÓA (ADMIN)
+function openAddModal(parentId){
+  if(!isAdmin) return; editingId=null; document.getElementById('modal-title').textContent='Thêm thành viên';
+  clearForm(); populateSelects(null);
+  if(parentId) document.getElementById('f-parent').value=parentId;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+function openEditModal(id){
+  if(!isAdmin) return; const m=members.find(x=>x.id===id); if(!m) return;
+  editingId=id; document.getElementById('modal-title').textContent='Sửa thông tin';
+  ['name','gender','birth','death','birthplace','job','note','phone','email','facebook'].forEach(k=>{ if(document.getElementById('f-'+k)) document.getElementById('f-'+k).value=m[k]||''; });
+  if(m.photo) setPhotoPreview(m.photo); else clearPhoto();
+  populateSelects(id); document.getElementById('f-parent').value=m.parentId||''; document.getElementById('f-spouse').value=m.spouseId||'';
+  document.getElementById('modal-overlay').classList.add('show');
+}
+function clearForm(){ ['name','birth','death','birthplace','job','note','phone','email','facebook'].forEach(k=>{ if(document.getElementById('f-'+k)) document.getElementById('f-'+k).value=''; }); document.getElementById('f-gender').value='male'; clearPhoto(); }
+function populateSelects(excludeId){
+  const ps=document.getElementById('f-parent'); const ss=document.getElementById('f-spouse');
+  ps.innerHTML='<option value="">— Không có (gốc) —</option>'; ss.innerHTML='<option value="">— Chưa có —</option>';
+  members.forEach(m=>{ if(m.id===excludeId) return; ps.innerHTML+=`<option value="${m.id}">${m.name} (${m.birth||'?'})</option>`; ss.innerHTML+=`<option value="${m.id}">${m.name} (${m.birth||'?'})</option>`; });
+}
+function closeModal(){ document.getElementById('modal-overlay').classList.remove('show'); editingId=null; }
+function confirmDelete(id){
+  if(!isAdmin) return; const m=members.find(x=>x.id===id); if(!confirm(`Xóa thành viên "${m.name}"? Hành động này không thể hoàn tác.`)) return;
+  members.forEach(x=>{ if(x.parentId===id) x.parentId=null; if(x.spouseId===id) x.spouseId=null; }); members=members.filter(x=>x.id!==id);
+  closePanel(); render(); scheduleSave();
+}
+function saveModal(){
+  if(!isAdmin) return; const name=document.getElementById('f-name').value.trim(); if(!name){alert('Vui lòng nhập họ và tên!');return;}
+  const photo = document.getElementById('photo-preview').dataset.photo || null;
+  const data = { name, gender:document.getElementById('f-gender').value, photo };
+  ['birth','death','birthplace','job','phone','email','facebook','note'].forEach(k=>{ const v=document.getElementById('f-'+k).value.trim(); if(v) data[k]=v; });
+  const pId=document.getElementById('f-parent').value, sId=document.getElementById('f-spouse').value;
+  if(pId) data.parentId=pId; if(sId) data.spouseId=sId;
+
+  if(editingId){
+    const idx=members.findIndex(m=>m.id===editingId); members[idx]={...members[idx],...data};
+    if(sId){ const sp=members.find(m=>m.id===sId); if(sp) sp.spouseId=editingId; }
+  } else {
+    const id=String(Date.now()); members.push({id,...data});
+    if(sId){ const sp=members.find(m=>m.id===sId); if(sp) sp.spouseId=id; }
+  }
+  closeModal(); render(); if(editingId) openPanel(editingId); scheduleSave();
+}
+
+// XỬ LÝ ẢNH BẰNG FIREBASE STORAGE
+async function handlePhotoFile(e) {
+  if(!isAdmin) return; const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    const img = new Image();
+    img.onload = async () => {
+      const canvas = document.createElement('canvas'); const ratio = Math.min(1, 400 / Math.max(img.width, img.height));
+      canvas.width = Math.round(img.width * ratio); canvas.height = Math.round(img.height * ratio);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      setPhotoPreview(canvas.toDataURL('image/jpeg', 0.8)); showSaveStatus('⏳ Đang tải ảnh lên...', '#c9922a');
+      try {
+        canvas.toBlob(async blob => {
+          const storageRef = storage.ref(`photos/${Date.now()}_${file.name}`);
+          const snap = await storageRef.put(blob, { contentType: 'image/jpeg' });
+          setPhotoPreview(await snap.ref.getDownloadURL()); showSaveStatus('✓ Đã tải ảnh lên an toàn', '#40c060');
+        }, 'image/jpeg', 0.8);
+      } catch(err) { showSaveStatus('⚠ Lỗi tải ảnh: ' + err.message, '#e06060'); }
+    }; img.src = ev.target.result;
+  }; reader.readAsDataURL(file);
+}
+function setPhotoPreview(src) { const el = document.getElementById('photo-preview'); el.dataset.photo = src; el.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`; document.getElementById('btn-clear-photo').style.display = 'inline-block'; }
+function clearPhoto() { const el = document.getElementById('photo-preview'); el.dataset.photo = ''; el.innerHTML = '👤'; document.getElementById('btn-clear-photo').style.display = 'none'; document.getElementById('f-photo-file').value = ''; }
+</script>
+</body>
+</html>
