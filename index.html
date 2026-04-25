@@ -637,7 +637,20 @@ function render(){
   });
 
   svg.innerHTML=html;
-  setupDrag(); applyTransform(); renderStats(gen,maxGen); renderLegend(maxGen);
+  setupDrag(); 
+
+  // --- THÊM LOGIC TỰ ĐỘNG CĂN GIỮA ---
+  if (panX === 0 && panY === 0) {
+    const wrapper = document.getElementById('tree-wrapper');
+    // Nếu màn hình rộng hơn cây -> Đẩy ra giữa. Nếu cây to hơn -> Đẩy cách lề 20px
+    panX = wrapper.clientWidth > W ? (wrapper.clientWidth - W) / 2 : 20;
+    panY = 40; // Cách mép trên 40px cho thoáng
+  }
+  // -----------------------------------
+
+  applyTransform(); 
+  renderStats(gen,maxGen); 
+  renderLegend(maxGen);
 }
 
 function applyTransform(){ document.getElementById('tree-svg').style.transform=`translate(${panX}px,${panY}px) scale(${scale})`; }
@@ -649,7 +662,17 @@ function setupDrag(){
 }
 function zoomIn(){ scale=Math.min(scale*1.2,3); applyTransform(); }
 function zoomOut(){ scale=Math.max(scale/1.2,.2); applyTransform(); }
-function resetView(){ scale=1; panX=0; panY=0; applyTransform(); }
+function resetView() { 
+  scale = 1; 
+  const svg = document.getElementById('tree-svg');
+  const wrapper = document.getElementById('tree-wrapper');
+  const W = parseFloat(svg.getAttribute('width')) || 0;
+  
+  // Tính toán lại tâm y như lúc tải trang
+  panX = wrapper.clientWidth > W ? (wrapper.clientWidth - W) / 2 : 20;
+  panY = 40; 
+  applyTransform(); 
+}
 document.getElementById('tree-wrapper').addEventListener('wheel',e=>{ e.preventDefault(); if(e.deltaY<0) zoomIn(); else zoomOut(); },{passive:false});
 
 // ═══════════════════════════════════════════════════
