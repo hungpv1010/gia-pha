@@ -56,7 +56,15 @@
   .legend-dot { width:14px; height:14px; border-radius:50%; border:2px solid; }
 
   /* ── MAIN LAYOUT & TREE ── */
-  .main { position:relative; z-index:10; display:flex; gap:0; min-height:calc(100vh - 220px); }
+  /* ── MAIN LAYOUT & TREE ── */
+  .main { 
+    position: relative; 
+    z-index: 10; 
+    display: flex; 
+    gap: 0; 
+    height: calc(100vh - 190px); /* Ép cố định chiều cao */
+    overflow: hidden; /* Khóa cuộn trang bên ngoài */
+  }
   .tree-wrapper { flex:1; overflow:auto; position:relative; padding: 2rem; }
   #tree-svg { display:block; cursor: grab; }
   #tree-svg:active { cursor: grabbing; }
@@ -75,7 +83,17 @@
   .info-label { color:var(--sepia); width:90px; flex-shrink:0; font-style:italic; }
   .info-val { color:var(--ink); flex:1; }
   .panel-note { margin-top:.8rem; padding:.7rem; background:rgba(139,105,20,.07); border-left:3px solid var(--gold); font-size:.88rem; color:var(--ink); line-height:1.6; font-style:italic; }
-  .panel-actions { padding:.8rem 1.2rem; display:flex; gap:.5rem; flex-wrap:wrap; border-top:1px solid rgba(201,146,42,.2); }
+  .panel-actions { 
+    padding: .8rem 1.2rem; 
+    display: flex; 
+    gap: .5rem; 
+    flex-wrap: wrap; 
+    border-top: 1px solid rgba(201,146,42,.2); 
+    background: var(--panel); /* Đổ màu nền để không bị trong suốt */
+    flex-shrink: 0; /* Lệnh này ép các nút không bao giờ bị thu nhỏ hoặc đẩy mất */
+    position: sticky;
+    bottom: 0;
+  }
   
   /* ── MODALS ── */
   .modal-overlay { position:fixed; inset:0; z-index:100; background:rgba(0,0,0,.8); display:flex; align-items:center; justify-content:center; padding:1rem; opacity:0; pointer-events:none; transition:opacity .2s; }
@@ -104,9 +122,27 @@
   ::-webkit-scrollbar { width:6px; height:6px; }
   ::-webkit-scrollbar-track { background:transparent; }
   ::-webkit-scrollbar-thumb { background:rgba(201,146,42,.4); border-radius:3px; }
-  @media(max-width:640px) {
-    .side-panel { position:fixed; right:0; top:0; bottom:0; z-index:50; }
-    .tree-wrapper { padding:.8rem; }
+  /* ── RESPONSIVE CHO ĐIỆN THOẠI ── */
+  @media(max-width: 768px) {
+    /* Thanh công cụ và thống kê */
+    .toolbar, .stats-bar, .legend { padding: .5rem; gap: .4rem; }
+    .btn { padding: .35rem .7rem; font-size: .85rem; }
+    
+    /* Cây gia phả */
+    .tree-wrapper { padding: 0; }
+    .main { height: calc(100vh - 210px); }
+
+    /* Panel hiển thị thông tin kéo full màn hình */
+    .side-panel { position: fixed; right: 0; top: 0; bottom: 0; width: 100%; z-index: 150; }
+    
+    /* Modal Form nhập liệu dọc (chia cột bị bé) */
+    .form-row { flex-direction: column; gap: 0; }
+    .modal { width: 95vw; max-height: 95vh; }
+    .modal-body { padding: 1rem; }
+    
+    /* Giao diện đăng nhập */
+    .auth-box { padding: 1.5rem; width: 95vw; }
+    .title-zh { font-size: 2.5rem; }
   }
 </style>
 </head>
@@ -654,11 +690,40 @@ function render(){
 }
 
 function applyTransform(){ document.getElementById('tree-svg').style.transform=`translate(${panX}px,${panY}px) scale(${scale})`; }
-function setupDrag(){
-  const wrapper=document.getElementById('tree-wrapper');
-  wrapper.onmousedown=e=>{ if(e.target.closest('.node')) return; isPanning=true; startPX=e.clientX-panX; startPY=e.clientY-panY; };
-  wrapper.onmousemove=e=>{ if(!isPanning) return; panX=e.clientX-startPX; panY=e.clientY-startPY; applyTransform(); };
-  wrapper.onmouseup=()=>isPanning=false; wrapper.onmouseleave=()=>isPanning=false;
+function setupDrag() {
+  const wrapper = document.getElementById('tree-wrapper');
+  
+  // 1. Tương tác trên MÁY TÍNH (Chuột)
+  wrapper.addEventListener('mousedown', e => { 
+    if(e.target.closest('.node')) return; 
+    isPanning=true; startPX=e.clientX-panX; startPY=e.clientY-panY; 
+  });
+  wrapper.addEventListener('mousemove', e => { 
+    if(!isPanning) return; 
+    panX=e.clientX-startPX; panY=e.clientY-startPY; applyTransform(); 
+  });
+  wrapper.addEventListener('mouseup', () => isPanning=false);
+  wrapper.addEventListener('mouseleave', () => isPanning=false);
+
+  // 2. Tương tác trên ĐIỆN THOẠI (Vuốt/Chạm)
+  wrapper.addEventListener('touchstart', e => { 
+    // Bỏ qua nếu bấm vào Node (để xem thông tin) hoặc dùng 2 ngón tay (để zoom)
+    if(e.target.closest('.node') || e.touches.length !== 1) return; 
+    isPanning=true; 
+    startPX=e.touches[0].clientX-panX; 
+    startPY=e.touches[0].clientY-panY; 
+  }, {passive: false});
+
+  wrapper.addEventListener('touchmove', e => { 
+    if(!isPanning) return; 
+    e.preventDefault(); // Rất quan trọng: Ngăn trình duyệt cuộn trang khi đang vuốt cây
+    panX=e.touches[0].clientX-startPX; 
+    panY=e.touches[0].clientY-startPY; 
+    applyTransform(); 
+  }, {passive: false});
+
+  wrapper.addEventListener('touchend', () => isPanning=false);
+  wrapper.addEventListener('touchcancel', () => isPanning=false);
 }
 function zoomIn(){ scale=Math.min(scale*1.2,3); applyTransform(); }
 function zoomOut(){ scale=Math.max(scale/1.2,.2); applyTransform(); }
