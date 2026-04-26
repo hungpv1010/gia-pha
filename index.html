@@ -586,8 +586,19 @@ function buildTree(data) {
   });
 
   units.forEach(u => {
-    const primary = data.find(x=>x.id===u.members[0]);
-    u.parentUnitId = (primary && primary.parentId) ? (unitMap[primary.parentId] || null) : null;
+    // Tìm parentUnitId bằng cách kiểm tra tất cả members trong unit
+    // (con có thể được gán parentId trỏ vào mẹ hoặc cha)
+    let found = null;
+    for (const mid of u.members) {
+      const member = data.find(x => x.id === mid);
+      if (member && member.parentId && unitMap[member.parentId]) {
+        found = unitMap[member.parentId];
+        break;
+      }
+    }
+    // Nếu không tìm thấy qua parentId, thử qua spouseId của members
+    // (trường hợp mẹ không có parentId nhưng spouseId trỏ đến cha đã có parentUnitId)
+    u.parentUnitId = found;
   });
 
   const unitById = {}; units.forEach(u => unitById[u.id]=u);
@@ -677,9 +688,23 @@ function render(){
   Object.entries(childrenByUnit).forEach(([puid, childUnits]) => {
     const pup = unitPos[puid]; if (!pup) return;
     const pUnit = units.find(u=>u.id===puid);
-    const pMember = members.find(x=>x.id===pUnit.members[0]);
-    const pNodeH = pMember && pMember.photo ? NODE_H + 44 : NODE_H;
-    const fromX = pup.x, fromY = pup.y + pNodeH;
+
+    // Đường kết nối xuất phát từ GIỮA cặp đôi nếu có 2 người
+    let fromX;
+    if (pUnit.members.length === 2) {
+      const p1 = pos[pUnit.members[0]], p2 = pos[pUnit.members[1]];
+      fromX = p1 && p2 ? (p1.x + p2.x) / 2 : pup.x;
+    } else {
+      fromX = pup.x;
+    }
+
+    // Chiều cao node tính theo người có ảnh (bất kỳ ai trong cặp)
+    const pNodeH = pUnit.members.some(mid => {
+      const mb = members.find(x => x.id === mid);
+      return mb && mb.photo && isSafePhotoUrl(mb.photo);
+    }) ? NODE_H + 44 : NODE_H;
+
+    const fromY = pup.y + pNodeH;
     const firstChild = childUnits[0];
     const childY = unitPos[firstChild.id]?.y ?? (pup.y + NODE_H + V_GAP);
     const midY = fromY + (childY - fromY) * 0.5;
