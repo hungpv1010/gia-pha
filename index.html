@@ -385,7 +385,8 @@
 // ═══════════════════════════════════════════════════
 function escapeHTML(str) {
   if (str === null || str === undefined) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+  const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;'};
+  return String(str).replace(/[&<>"']/g, c => map[c]);
 }
 function isSafePhotoUrl(url) {
   if (!url) return false;
@@ -905,6 +906,7 @@ function autoCalcGioi(){
     document.getElementById('f-gioid').value=`${lunar.day}/${lunar.month}`;
   }catch(e){alert('Không thể tính âm lịch: '+e.message);}
 }
+function checkGioi(){
   const lunar=getCurrentLunar();
   const curM=lunar.month,curD=lunar.day;
   const upcoming=[];
@@ -916,20 +918,65 @@ function autoCalcGioi(){
     else return;
     if(daysLeft>=-1&&daysLeft<=30)upcoming.push({member:m,gioi:g,daysLeft});
   });
-  if(!upcoming.length)return;
+
+  // Xóa banner cũ nếu không có giỗ
+  const oldBanner=document.getElementById('gioi-banner');
+  if(!upcoming.length){if(oldBanner)oldBanner.remove();return;}
   upcoming.sort((a,b)=>a.daysLeft-b.daysLeft);
-  let banner=document.getElementById('gioi-banner');
+
+  // Tạo banner bằng DOM (tránh HTML entities trong script)
+  let banner=oldBanner;
   if(!banner){
-    banner=document.createElement('div');banner.id='gioi-banner';
-    banner.style.cssText='position:fixed;top:1.2rem;right:1.2rem;z-index:9999;background:linear-gradient(135deg,#3a1a0a,#5a2a10);border:1px solid var(--gold);border-radius:8px;padding:.8rem 1rem;max-width:300px;min-width:220px;box-shadow:0 4px 20px rgba(0,0,0,.5);font-family:"Cormorant Garamond",serif;color:var(--parch)';
+    banner=document.createElement('div');
+    banner.id='gioi-banner';
+    Object.assign(banner.style,{
+      position:'fixed',top:'1.2rem',right:'1.2rem',zIndex:'9999',
+      background:'linear-gradient(135deg,#3a1a0a,#5a2a10)',
+      border:'1px solid #c9922a',borderRadius:'8px',
+      padding:'.8rem 1rem',maxWidth:'300px',minWidth:'220px',
+      boxShadow:'0 4px 20px rgba(0,0,0,.5)',
+      fontFamily:'"Cormorant Garamond",serif',color:'#f5ead6'
+    });
     document.body.appendChild(banner);
   }
-  let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem"><span style="color:var(--gold);font-size:.85rem;font-weight:700">🕯️ NGÀY GIỖ SẮP ĐẾN</span><button onclick="document.getElementById('gioi-banner').style.display='none'" style="background:none;border:none;color:var(--sepia);cursor:pointer;font-size:1rem;padding:0">✕</button></div>`;
+  banner.innerHTML=''; // clear
+
+  // Header
+  const hdr=document.createElement('div');
+  Object.assign(hdr.style,{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'.5rem'});
+  const title=document.createElement('span');
+  title.style.cssText='color:#c9922a;font-size:.85rem;font-weight:700';
+  title.textContent='🕯️ NGÀY GIỖ SẮP ĐẾN';
+  const closeBtn=document.createElement('button');
+  closeBtn.textContent='✕';
+  closeBtn.style.cssText='background:none;border:none;color:#8b6914;cursor:pointer;font-size:1rem;padding:0;line-height:1';
+  closeBtn.onclick=()=>banner.remove();
+  hdr.appendChild(title);hdr.appendChild(closeBtn);
+  banner.appendChild(hdr);
+
   upcoming.forEach(({member,gioi,daysLeft})=>{
-    const label=daysLeft<0?`<span style="color:#e08040">Hôm qua</span>`:daysLeft===0?`<span style="color:#e05050;font-weight:700">Hôm nay!</span>`:daysLeft===1?`<span style="color:#e08040">Ngày mai</span>`:`<span style="color:var(--sepia)">Còn ${daysLeft} ngày</span>`;
-    html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border-top:1px solid rgba(139,105,20,.2)"><div><div style="font-size:.9rem;font-weight:600">${escapeHTML(member.name)}</div><div style="font-size:.75rem;color:var(--sepia)">Giỗ ${gioi.day}/${gioi.month} âm lịch</div></div>${label}</div>`;
+    const row=document.createElement('div');
+    Object.assign(row.style,{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'.3rem 0',borderTop:'1px solid rgba(139,105,20,.2)'});
+
+    const info=document.createElement('div');
+    const name=document.createElement('div');
+    name.style.cssText='font-size:.9rem;font-weight:600';
+    name.textContent=member.name;
+    const date=document.createElement('div');
+    date.style.cssText='font-size:.75rem;color:#8b6914';
+    date.textContent='Giỗ '+gioi.day+'/'+gioi.month+' âm lịch';
+    info.appendChild(name);info.appendChild(date);
+
+    const tag=document.createElement('span');
+    tag.style.cssText='font-size:.8rem';
+    if(daysLeft<0){tag.textContent='Hôm qua';tag.style.color='#e08040';}
+    else if(daysLeft===0){tag.textContent='Hôm nay!';tag.style.cssText='font-size:.8rem;color:#e05050;font-weight:700';}
+    else if(daysLeft===1){tag.textContent='Ngày mai';tag.style.color='#e08040';}
+    else{tag.textContent='Còn '+daysLeft+' ngày';tag.style.color='#8b6914';}
+
+    row.appendChild(info);row.appendChild(tag);
+    banner.appendChild(row);
   });
-  banner.innerHTML=html;
 }
 
 // ═══════════════════════════════════════════════════
