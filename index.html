@@ -889,19 +889,47 @@ function confirmDelete(id){
 function saveModal(){
   if(!isAdmin) return; const name=document.getElementById('f-name').value.trim(); if(!name){alert('Vui lòng nhập họ và tên!');return;}
   const photo = document.getElementById('photo-preview').dataset.photo || null;
-  const data = { name, gender:document.getElementById('f-gender').value, photo };
-  ['birth','death','birthplace','job','phone','email','facebook','note'].forEach(k=>{ const v=document.getElementById('f-'+k).value.trim(); if(v) data[k]=v; });
-  const pId=document.getElementById('f-parent').value, sId=document.getElementById('f-spouse').value;
-  if(pId) data.parentId=pId; if(sId) data.spouseId=sId;
+
+  // Xây dựng data mới — các field trống sẽ được set null để xóa giá trị cũ
+  const data = { name, gender: document.getElementById('f-gender').value, photo };
+  ['birth','death','birthplace','job','phone','email','facebook','note'].forEach(k => {
+    const v = document.getElementById('f-'+k).value.trim();
+    data[k] = v || null; // null thay vì bỏ qua — để ghi đè xóa giá trị cũ
+  });
+
+  const pId = document.getElementById('f-parent').value || null;
+  const sId = document.getElementById('f-spouse').value || null;
+  data.parentId = pId || null;
+  data.spouseId = sId || null;
 
   if(editingId){
-    const idx=members.findIndex(m=>m.id===editingId); members[idx]={...members[idx],...data};
-    if(sId){ const sp=members.find(m=>m.id===sId); if(sp) sp.spouseId=editingId; }
+    const idx = members.findIndex(m => m.id === editingId);
+    const oldSpouseId = members[idx].spouseId;
+
+    // Nếu vợ/chồng cũ khác vợ/chồng mới → hủy liên kết người cũ
+    if(oldSpouseId && oldSpouseId !== sId){
+      const oldSpouse = members.find(m => m.id === oldSpouseId);
+      if(oldSpouse) oldSpouse.spouseId = null;
+    }
+
+    // Ghi đè toàn bộ — kể cả các field null để xóa dữ liệu cũ
+    members[idx] = { ...members[idx], ...data };
+
+    // Xóa hẳn các key null khỏi object để Firestore không lưu rác
+    Object.keys(members[idx]).forEach(k => { if(members[idx][k] === null) delete members[idx][k]; });
+
+    // Cập nhật liên kết vợ/chồng mới
+    if(sId){ const sp = members.find(m => m.id === sId); if(sp) sp.spouseId = editingId; }
   } else {
-    const id=generateId(); members.push({id,...data});
-    if(sId){ const sp=members.find(m=>m.id===sId); if(sp) sp.spouseId=id; }
+    const id = generateId();
+    const newMember = { id, ...data };
+    Object.keys(newMember).forEach(k => { if(newMember[k] === null) delete newMember[k]; });
+    members.push(newMember);
+    if(sId){ const sp = members.find(m => m.id === sId); if(sp) sp.spouseId = id; }
   }
-  closeModal(); render(); if(editingId) openPanel(editingId); scheduleSave();
+
+  const savedEditingId = editingId;
+  closeModal(); render(); if(savedEditingId) openPanel(savedEditingId); scheduleSave();
 }
 
 // XỬ LÝ ẢNH BẰNG FIREBASE STORAGE
