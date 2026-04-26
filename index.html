@@ -124,25 +124,74 @@
   ::-webkit-scrollbar-thumb { background:rgba(201,146,42,.4); border-radius:3px; }
   /* ── RESPONSIVE CHO ĐIỆN THOẠI ── */
   @media(max-width: 768px) {
-    /* Thanh công cụ và thống kê */
-    .toolbar, .stats-bar, .legend { padding: .5rem; gap: .4rem; }
-    .btn { padding: .35rem .7rem; font-size: .85rem; }
-    
+    /* Header gọn hơn */
+    header { padding: 1rem 1rem .8rem; }
+    .title-zh { font-size: 2.2rem; }
+    .title-vi { font-size: .8rem; letter-spacing: .2em; }
+    .clan-name { font-size: 1.1rem; }
+
+    /* Stats & toolbar gọn */
+    .stats-bar { padding: .4rem .5rem; gap: .3rem; }
+    .stat { padding: .25rem .5rem; }
+    .stat-num { font-size: 1rem; }
+    .stat-lbl { font-size: .6rem; }
+    .toolbar { padding: .4rem .5rem; gap: .35rem; }
+    .btn { padding: .3rem .65rem; font-size: .82rem; }
+    .legend { padding: .3rem .5rem; gap: .4rem; }
+    .search-bar { padding: .3rem .5rem; }
+    .search-bar input { font-size: .9rem; padding: .35rem .8rem; }
+
     /* Cây gia phả */
     .tree-wrapper { padding: 0; }
-    .main { height: calc(100vh - 210px); }
+    .main { height: calc(100dvh - 200px); }
 
-    /* Panel hiển thị thông tin kéo full màn hình */
-    .side-panel { position: fixed; right: 0; top: 0; bottom: 0; width: 100%; z-index: 150; }
-    
-    /* Modal Form nhập liệu dọc (chia cột bị bé) */
+    /* ── PANEL: full màn hình, bắt đầu TỪ TOP=0, có scroll bên trong ── */
+    .side-panel {
+      position: fixed;
+      inset: 0;               /* top:0 right:0 bottom:0 left:0 */
+      width: 100%;
+      z-index: 200;
+      transform: translateY(100%);   /* slide lên từ dưới thay vì từ phải */
+      transition: transform .3s ease;
+    }
+    .side-panel.open { transform: translateY(0); }
+
+    /* Header panel luôn hiển thị và dính trên cùng */
+    .panel-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 1rem 1.2rem;
+    }
+    .panel-header h2 { font-size: 1rem; }
+    .panel-close {
+      font-size: 1.6rem;
+      padding: .2rem .4rem;
+      min-width: 36px;
+      min-height: 36px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .panel-body { padding: 1rem; }
+    .panel-actions {
+      position: sticky;
+      bottom: 0;
+      padding: .8rem 1rem;
+      gap: .4rem;
+    }
+    .panel-actions .btn { flex: 1; text-align: center; }
+
+    /* Modal form */
     .form-row { flex-direction: column; gap: 0; }
-    .modal { width: 95vw; max-height: 95vh; }
-    .modal-body { padding: 1rem; }
-    
-    /* Giao diện đăng nhập */
+    .modal { width: 100%; max-height: 95dvh; border-radius: 4px 4px 0 0; margin-top: auto; }
+    .modal-overlay { align-items: flex-end; padding: 0; }
+    .modal-overlay.show .modal { transform: translateY(0); }
+    .modal-body { padding: .8rem 1rem; }
+
+    /* Auth */
     .auth-box { padding: 1.5rem; width: 95vw; }
-    .title-zh { font-size: 2.5rem; }
+
+    /* Tab việc họ */
+    #pane-viecho { max-height: calc(100dvh - 160px); }
   }
 </style>
 </head>
@@ -296,8 +345,21 @@
         <div class="form-group"><label>Năm mất</label><input id="f-death" type="text" placeholder="(còn sống)"></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>🕯️ Ngày giỗ (âm lịch)</label><input id="f-gioid" type="text" placeholder="VD: 15/10"></div>
-        <div class="form-group"><label>Nơi sinh</label><input id="f-birthplace" type="text" placeholder="Làng An Khê, Nghệ An"></div>
+        <div class="form-group">
+          <label>📅 Ngày mất (dương lịch)</label>
+          <div style="display:flex;gap:.4rem">
+            <input id="f-death-day" type="number" min="1" max="31" placeholder="Ngày" style="width:70px">
+            <input id="f-death-month" type="number" min="1" max="12" placeholder="Tháng" style="width:70px">
+          </div>
+          <div style="font-size:.73rem;color:var(--sepia);font-style:italic;margin-top:.2rem">Ngày &amp; tháng (năm đã điền trên)</div>
+        </div>
+        <div class="form-group"><label>🕯️ Ngày giỗ (âm lịch)</label>
+          <div style="display:flex;gap:.4rem;align-items:center">
+            <input id="f-gioid" type="text" placeholder="VD: 15/10" style="flex:1">
+            <button type="button" onclick="autoCalcGioi()" title="Tự tính từ ngày mất dương lịch" style="font-family:'Cormorant Garamond',serif;font-size:.78rem;padding:.3rem .6rem;border:1px solid rgba(139,105,20,.5);border-radius:2px;background:none;color:var(--sepia);cursor:pointer;white-space:nowrap">⚙ Tự tính</button>
+          </div>
+          <div style="font-size:.73rem;color:var(--sepia);font-style:italic;margin-top:.2rem">Hoặc nhập tay ngày/tháng âm lịch</div>
+        </div>
       </div>
       <div class="form-group"><label>Nghề nghiệp</label><input id="f-job" type="text" placeholder="Nông dân, Nhà giáo…"></div>
       <div style="font-size:.8rem;color:var(--sepia);letter-spacing:.06em;text-transform:uppercase;margin:.6rem 0 .4rem;border-bottom:1px solid rgba(139,105,20,.2);padding-bottom:.3rem">Liên hệ</div>
@@ -688,7 +750,7 @@ function openPanel(id){
     <div class="panel-name">${escapeHTML(m.name)}</div>
     <div class="panel-gen">Đời thứ ${g+1} · ${m.gender==='male'?'Nam':'Nữ'} · ${!m.death?'<span style="color:#40c060">Còn sống</span>':'Đã mất'}</div>
     <div class="info-row"><span class="info-label">Năm sinh</span><span class="info-val">${escapeHTML(m.birth)||'—'}</span></div>
-    ${m.death?`<div class="info-row"><span class="info-label">Năm mất</span><span class="info-val">${escapeHTML(m.death)}</span></div>`:''}
+    ${m.death?`<div class="info-row"><span class="info-label">Năm mất</span><span class="info-val">${m.deathDay&&m.deathMonth?`${m.deathDay}/${m.deathMonth}/`:``}${escapeHTML(m.death)}</span></div>`:''}
     ${m.gioid?`<div class="info-row"><span class="info-label">🕯️ Ngày giỗ</span><span class="info-val">${escapeHTML(m.gioid)} (âm lịch)</span></div>`:''}
     <div class="info-row"><span class="info-label">Nơi sinh</span><span class="info-val">${escapeHTML(m.birthplace)||'—'}</span></div>
     <div class="info-row"><span class="info-label">Nghề nghiệp</span><span class="info-val">${escapeHTML(m.job)||'—'}</span></div>
@@ -720,11 +782,13 @@ function openEditModal(id){
   if(!isAdmin)return;const m=members.find(x=>x.id===id);if(!m)return;
   editingId=id;document.getElementById('modal-title').textContent='Sửa thông tin';
   ['name','gender','birth','death','gioid','birthplace','job','note','phone','email','facebook'].forEach(k=>{if(document.getElementById('f-'+k))document.getElementById('f-'+k).value=m[k]||'';});
+  if(document.getElementById('f-death-day'))document.getElementById('f-death-day').value=m.deathDay||'';
+  if(document.getElementById('f-death-month'))document.getElementById('f-death-month').value=m.deathMonth||'';
   if(m.photo)setPhotoPreview(m.photo);else clearPhoto();
   populateSelects(id);document.getElementById('f-parent').value=m.parentId||'';document.getElementById('f-spouse').value=m.spouseId||'';
   document.getElementById('modal-overlay').classList.add('show');
 }
-function clearForm(){['name','birth','death','gioid','birthplace','job','note','phone','email','facebook'].forEach(k=>{if(document.getElementById('f-'+k))document.getElementById('f-'+k).value='';});document.getElementById('f-gender').value='male';clearPhoto();}
+function clearForm(){['name','birth','death','death-day','death-month','gioid','birthplace','job','note','phone','email','facebook'].forEach(k=>{if(document.getElementById('f-'+k))document.getElementById('f-'+k).value='';});document.getElementById('f-gender').value='male';clearPhoto();}
 function populateSelects(excludeId){
   const ps=document.getElementById('f-parent'),ss=document.getElementById('f-spouse');
   ps.innerHTML='<option value="">— Không có (gốc) —</option>';ss.innerHTML='<option value="">— Chưa có —</option>';
@@ -744,6 +808,9 @@ function saveModal(){
     const v=document.getElementById('f-'+k).value.trim();
     data[k]=v||null;
   });
+  const dd=parseInt(document.getElementById('f-death-day').value)||null;
+  const dm=parseInt(document.getElementById('f-death-month').value)||null;
+  data.deathDay=dd; data.deathMonth=dm;
   const pId=document.getElementById('f-parent').value||null;
   const sId=document.getElementById('f-spouse').value||null;
   data.parentId=pId; data.spouseId=sId;
@@ -826,7 +893,18 @@ function parseGioid(str){
   if(day<1||day>30||month<1||month>12)return null;
   return{day,month};
 }
-function checkGioi(){
+function autoCalcGioi(){
+  const day=parseInt(document.getElementById('f-death-day').value);
+  const month=parseInt(document.getElementById('f-death-month').value);
+  const year=parseInt(document.getElementById('f-death').value);
+  if(!day||!month||!year||isNaN(day)||isNaN(month)||isNaN(year)){
+    alert('Vui lòng nhập đủ Ngày, Tháng và Năm mất (dương lịch) trước khi tự tính.');return;
+  }
+  try{
+    const lunar=solarToLunar(day,month,year);
+    document.getElementById('f-gioid').value=`${lunar.day}/${lunar.month}`;
+  }catch(e){alert('Không thể tính âm lịch: '+e.message);}
+}
   const lunar=getCurrentLunar();
   const curM=lunar.month,curD=lunar.day;
   const upcoming=[];
@@ -865,7 +943,17 @@ function switchTab(tab){
     btn.style.borderBottomColor=tab===t?'var(--gold)':'transparent';
     btn.style.color=tab===t?'var(--gold)':'var(--sepia)';
   });
-  if(tab==='viecho'){initYearSelects();renderCungHo();}
+  if(tab==='viecho'){
+    initYearSelects();
+    // Đảm bảo pane-cung hiển thị mặc định
+    document.getElementById('pane-cung').style.display='';
+    document.getElementById('pane-truc').style.display='none';
+    // Cập nhật style nút sub-tab
+    const sc=document.getElementById('subtab-cung'),st=document.getElementById('subtab-truc');
+    sc.style.background='var(--gold)';sc.style.color='#1a0a00';sc.style.borderColor='var(--gold)';
+    st.style.background='none';st.style.color='var(--sepia)';st.style.borderColor='rgba(139,105,20,.4)';
+    renderCungHo();
+  }
 }
 function switchSubTab(sub){
   document.getElementById('pane-cung').style.display=sub==='cung'?'':'none';
@@ -890,7 +978,11 @@ function initYearSelects(){
     for(let y=yr+1;y>=yr-3;y--){const opt=document.createElement('option');opt.value=y;opt.textContent=`Năm ${y}`;if(y===yr)opt.selected=true;sel.appendChild(opt);}
   });
 }
-function cungKey(){return `${document.getElementById('cung-year').value}_${document.getElementById('cung-ky').value}`;}
+function cungKey(){
+  const yr=document.getElementById('cung-year').value||new Date().getFullYear();
+  const ky=document.getElementById('cung-ky').value||'12';
+  return `${yr}_${ky}`;
+}
 async function loadCungHo(key){try{const s=await db.collection('viec-ho').doc('cung_'+key).get();cungData[key]=s.exists?s.data():{};}catch{cungData[key]={};}};
 async function renderCungHo(){
   const key=cungKey();
