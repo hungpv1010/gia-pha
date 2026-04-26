@@ -174,82 +174,32 @@
 
   <div class="stats-bar" id="stats-bar"></div>
 
-  <!-- Tab điều hướng -->
-  <div style="display:flex;gap:.5rem;padding:.5rem 1rem 0;border-bottom:1px solid rgba(139,105,20,.3);background:rgba(0,0,0,.2)">
-    <button id="tab-cay" onclick="switchTab('cay')" style="font-family:'Cormorant Garamond',serif;font-size:.9rem;padding:.4rem 1.1rem;border:none;border-bottom:2px solid var(--gold);background:none;color:var(--gold);cursor:pointer;letter-spacing:.04em">🌳 Cây gia phả</button>
-    <button id="tab-viecho" onclick="switchTab('viecho')" style="font-family:'Cormorant Garamond',serif;font-size:.9rem;padding:.4rem 1.1rem;border:none;border-bottom:2px solid transparent;background:none;color:var(--sepia);cursor:pointer;letter-spacing:.04em">📋 Việc họ</button>
+  <div class="toolbar">
+    <button class="btn" onclick="zoomIn()">＋ Phóng to</button>
+    <button class="btn" onclick="zoomOut()">－ Thu nhỏ</button>
+    <button class="btn" onclick="resetView()">⟳ Mặc định</button>
+    <button class="btn admin-only" onclick="openAddModal(null)" style="display:none">＋ Thêm thành viên</button>
+    <button class="btn admin-only" onclick="openCreateUserModal()" style="display:none">👥 Cấp tài khoản xem</button>
   </div>
 
-  <!-- Tab cây gia phả -->
-  <div id="pane-cay">
-    <div class="toolbar">
-      <button class="btn" onclick="zoomIn()">＋ Phóng to</button>
-      <button class="btn" onclick="zoomOut()">－ Thu nhỏ</button>
-      <button class="btn" onclick="resetView()">⟳ Mặc định</button>
-      <button class="btn admin-only" onclick="openAddModal(null)" style="display:none">＋ Thêm thành viên</button>
-      <button class="btn admin-only" onclick="openCreateUserModal()" style="display:none">👥 Cấp tài khoản xem</button>
-    </div>
-    <div class="search-bar">
-      <input type="text" id="search" placeholder="🔍 Tìm kiếm thành viên..." oninput="handleSearch(this.value)">
-    </div>
-    <div class="legend" id="gen-legend"></div>
-    <div class="main">
-      <div class="tree-wrapper" id="tree-wrapper">
-        <svg id="tree-svg"></svg>
-      </div>
-      <div class="side-panel" id="side-panel">
-        <div class="panel-header">
-          <h2>Thông tin thành viên</h2>
-          <button class="panel-close" onclick="closePanel()">✕</button>
-        </div>
-        <div class="panel-body" id="panel-body"></div>
-        <div class="panel-actions" id="panel-actions"></div>
-      </div>
-    </div>
+  <div class="search-bar">
+    <input type="text" id="search" placeholder="🔍 Tìm kiếm thành viên..." oninput="handleSearch(this.value)">
   </div>
 
-  <!-- Tab Việc họ -->
-  <div id="pane-viecho" style="display:none;padding:1rem;overflow-y:auto;max-height:calc(100vh - 160px)">
+  <div class="legend" id="gen-legend"></div>
 
-    <!-- Sub-tab -->
-    <div style="display:flex;gap:.5rem;margin-bottom:1rem">
-      <button id="subtab-cung" onclick="switchSubTab('cung')" style="font-family:'Cormorant Garamond',serif;font-size:.85rem;padding:.35rem 1rem;border:1px solid var(--gold);border-radius:3px;background:var(--gold);color:#1a0a00;cursor:pointer">🏮 Cúng họ</button>
-      <button id="subtab-truc" onclick="switchSubTab('truc')" style="font-family:'Cormorant Garamond',serif;font-size:.85rem;padding:.35rem 1rem;border:1px solid rgba(139,105,20,.4);border-radius:3px;background:none;color:var(--sepia);cursor:pointer">🏠 Trực tết</button>
+  <div class="main">
+    <div class="tree-wrapper" id="tree-wrapper">
+      <svg id="tree-svg"></svg>
     </div>
-
-    <!-- Pane cúng họ -->
-    <div id="pane-cung">
-      <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem">
-        <select id="cung-year" onchange="renderCungHo()" style="font-family:'Cormorant Garamond',serif;padding:.3rem .6rem;background:rgba(139,105,20,.1);border:1px solid rgba(139,105,20,.4);color:var(--ink);border-radius:3px"></select>
-        <select id="cung-ky" onchange="renderCungHo()" style="font-family:'Cormorant Garamond',serif;padding:.3rem .6rem;background:rgba(139,105,20,.1);border:1px solid rgba(139,105,20,.4);color:var(--ink);border-radius:3px">
-          <option value="12">🏮 Kỳ 15 tháng Chạp (15/12 âm)</option>
-          <option value="1">🌸 Kỳ Rằm tháng Giêng (15/1 âm)</option>
-        </select>
-        <button class="btn admin-only" onclick="saveCungHo()" style="display:none">💾 Lưu</button>
+    <div class="side-panel" id="side-panel">
+      <div class="panel-header">
+        <h2>Thông tin thành viên</h2>
+        <button class="panel-close" onclick="closePanel()">✕</button>
       </div>
-      <div style="font-size:.8rem;color:var(--sepia);margin-bottom:.7rem">Danh sách đinh (nam) trong họ phải đóng góp:</div>
-      <div style="background:rgba(139,105,20,.08);border:1px solid rgba(139,105,20,.25);border-radius:4px;padding:.6rem .8rem;margin-bottom:.8rem">
-        <div style="font-size:.8rem;color:var(--sepia);margin-bottom:.4rem;font-style:italic">Mức đóng góp kỳ này (admin có thể sửa):</div>
-        <div style="display:flex;gap:.6rem;flex-wrap:wrap">
-          <label style="font-size:.82rem;color:var(--ink)">💰 Tiền: <input id="cung-tien" type="text" placeholder="100.000đ" style="width:90px;font-family:'Cormorant Garamond',serif;background:rgba(139,105,20,.1);border:1px solid rgba(139,105,20,.3);color:var(--ink);padding:.2rem .4rem;border-radius:2px"></label>
-          <label style="font-size:.82rem;color:var(--ink)">🌾 Gạo nếp: <input id="cung-gao" type="text" placeholder="1kg" style="width:70px;font-family:'Cormorant Garamond',serif;background:rgba(139,105,20,.1);border:1px solid rgba(139,105,20,.3);color:var(--ink);padding:.2rem .4rem;border-radius:2px"></label>
-          <label style="font-size:.82rem;color:var(--ink)">🐔 Thịt gà: <input id="cung-ga" type="text" placeholder="½ con" style="width:70px;font-family:'Cormorant Garamond',serif;background:rgba(139,105,20,.1);border:1px solid rgba(139,105,20,.3);color:var(--ink);padding:.2rem .4rem;border-radius:2px"></label>
-        </div>
-      </div>
-      <div id="cung-list"></div>
-      <div id="cung-summary" style="margin-top:.8rem;padding:.6rem .8rem;background:rgba(139,105,20,.1);border-radius:4px;font-size:.85rem"></div>
+      <div class="panel-body" id="panel-body"></div>
+      <div class="panel-actions" id="panel-actions"></div>
     </div>
-
-    <!-- Pane trực tết -->
-    <div id="pane-truc" style="display:none">
-      <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem">
-        <select id="truc-year" onchange="renderTrucTet()" style="font-family:'Cormorant Garamond',serif;padding:.3rem .6rem;background:rgba(139,105,20,.1);border:1px solid rgba(139,105,20,.4);color:var(--ink);border-radius:3px"></select>
-        <button class="btn admin-only" onclick="saveTrucTet()" style="display:none">💾 Lưu</button>
-      </div>
-      <div style="font-size:.8rem;color:var(--sepia);margin-bottom:.7rem">Phân công trực nhà thờ họ dịp Tết Nguyên Đán:</div>
-      <div id="truc-list"></div>
-    </div>
-
   </div>
 </div>
 
@@ -267,7 +217,7 @@
       </div>
       <div class="form-group">
         <label>Mật khẩu khởi tạo</label>
-        <input type="password" id="new-user-pw" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password">
+        <input type="text" id="new-user-pw" placeholder="Tối thiểu 6 ký tự">
       </div>
     </div>
     <div class="modal-foot">
@@ -300,10 +250,9 @@
         <div class="form-group"><label>Năm mất</label><input id="f-death" type="text" placeholder="(còn sống)"></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>🕯️ Ngày giỗ (âm lịch)</label><input id="f-gioid" type="text" placeholder="VD: 15/10 (ngày/tháng)"></div>
         <div class="form-group"><label>Nơi sinh</label><input id="f-birthplace" type="text" placeholder="Làng An Khê, Nghệ An"></div>
+        <div class="form-group"><label>Nghề nghiệp</label><input id="f-job" type="text" placeholder="Nông dân, Nhà giáo…"></div>
       </div>
-      <div class="form-group"><label>Nghề nghiệp</label><input id="f-job" type="text" placeholder="Nông dân, Nhà giáo…"></div>
       <div style="font-size:.8rem;color:var(--sepia);letter-spacing:.06em;text-transform:uppercase;margin:.6rem 0 .4rem;border-bottom:1px solid rgba(139,105,20,.2);padding-bottom:.3rem">Liên hệ</div>
       <div class="form-row">
         <div class="form-group"><label>📞 Điện thoại</label><input id="f-phone" type="text" placeholder="0912 345 678"></div>
@@ -322,42 +271,6 @@
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════
-//  0. TIỆN ÍCH BẢO MẬT
-// ═══════════════════════════════════════════════════
-
-// Chống XSS: Escape tất cả ký tự đặc biệt HTML trước khi chèn vào DOM
-function escapeHTML(str) {
-  if (str === null || str === undefined) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;');
-}
-
-// Chỉ cho phép URL ảnh từ Firebase Storage hoặc data URI (canvas resize)
-function isSafePhotoUrl(url) {
-  if (!url) return false;
-  if (url.startsWith('data:image/')) return true; // canvas toDataURL
-  try {
-    const u = new URL(url);
-    return (u.protocol === 'https:') &&
-      (u.hostname.endsWith('firebasestorage.googleapis.com') ||
-       u.hostname.endsWith('storage.googleapis.com'));
-  } catch { return false; }
-}
-
-// Tạo ID ngẫu nhiên an toàn thay vì Date.now()
-function generateId() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  // Fallback cho trình duyệt cũ
-  return 'id_' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-}
-
 // ═══════════════════════════════════════════════════
 //  1. CẤU HÌNH FIREBASE
 // ═══════════════════════════════════════════════════
@@ -403,59 +316,102 @@ auth.onAuthStateChanged(async (user) => {
       if (doc.exists && doc.data().role === 'admin') {
         isAdmin = true;
         document.getElementById('user-info').innerHTML = `👑 Admin: <b>${user.email}</b>`;
+      } else if (!doc.exists) {
+        // Tài khoản chưa có role — kiểm tra có admin nào chưa
+        try {
+          const adminSnap = await db.collection('users').where('role','==','admin').limit(1).get();
+          if (adminSnap.empty) {
+            isAdmin = false;
+            document.getElementById('user-info').innerHTML =
+              `⚠️ <b>${user.email}</b> — Chưa có admin nào. 
+               <button onclick="claimAdmin()" style="margin-left:.5rem;font-family:'Cormorant Garamond',serif;font-size:.8rem;padding:.2rem .6rem;border:1px solid var(--gold);border-radius:2px;background:none;color:var(--gold);cursor:pointer">
+                 Nhận quyền Admin (lần đầu)
+               </button>`;
+          } else {
+            isAdmin = false;
+            document.getElementById('user-info').innerHTML = `👁 Người xem: <b>${user.email}</b> — Liên hệ admin để được cấp quyền`;
+          }
+        } catch(e2) {
+          // Firestore Rules chặn query where → thử tự nhận admin
+          isAdmin = false;
+          document.getElementById('user-info').innerHTML =
+            `⚠️ <b>${user.email}</b> — Tài khoản chưa được cấp quyền.
+             <button onclick="claimAdmin()" style="margin-left:.5rem;font-family:'Cormorant Garamond',serif;font-size:.8rem;padding:.2rem .6rem;border:1px solid var(--gold);border-radius:2px;background:none;color:var(--gold);cursor:pointer">
+               Nhận quyền Admin
+             </button>`;
+        }
       } else {
         isAdmin = false;
         document.getElementById('user-info').innerHTML = `👁 Người xem: <b>${user.email}</b>`;
       }
     } catch (e) {
-      console.error("Lỗi lấy quyền:", e);
-      isAdmin = false; // Mặc định an toàn: Chỉ cho xem nếu có lỗi
-      document.getElementById('user-info').innerHTML = `👁 Người xem: <b>${user.email}</b>`;
+      // Firestore Rules chặn đọc users/{uid} — thường do Rules chưa được cấu hình
+      isAdmin = false;
+      document.getElementById('user-info').innerHTML =
+        `⚠️ <b>${user.email}</b> — Lỗi phân quyền (${e.code||e.message}).
+         <button onclick="claimAdmin()" style="margin-left:.5rem;font-family:'Cormorant Garamond',serif;font-size:.8rem;padding:.2rem .6rem;border:1px solid var(--gold);border-radius:2px;background:none;color:var(--gold);cursor:pointer">
+           Nhận quyền Admin
+         </button>`;
     }
 
     updateUIBasedOnRole();
     startRealtimeSync(); 
   } else {
-    // Chưa đăng nhập hoặc vừa đăng xuất
     currentUser = null;
     isAdmin = false;
     document.getElementById('auth-wrapper').style.display = 'flex';
     document.getElementById('app-wrapper').style.display = 'none';
-    if(unsubscribeData) unsubscribeData(); // Dừng tải dữ liệu
+    if(unsubscribeData) unsubscribeData();
   }
 });
 
-let loginAttempts = 0;
-let loginLockedUntil = 0;
+async function claimAdmin() {
+  if (!currentUser) return;
+  try {
+    await db.collection('users').doc(currentUser.uid).set({
+      email: currentUser.email,
+      role: 'admin',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    isAdmin = true;
+    document.getElementById('user-info').innerHTML = `👑 Admin: <b>${currentUser.email}</b>`;
+    updateUIBasedOnRole();
+    alert('✓ Đã nhận quyền Admin thành công!');
+  } catch(e) {
+    alert(`Lỗi khi nhận quyền Admin: ${e.code} — ${e.message}\n\nKiểm tra Firestore Rules cho phép ghi vào collection "users".`);
+  }
+}
+
+function showLoginErr(msg) {
+  document.getElementById('login-err').style.color = "var(--red)";
+  document.getElementById('login-err').textContent = msg;
+}
+function showLoginInfo(msg) {
+  document.getElementById('login-err').style.color = "var(--gold)";
+  document.getElementById('login-err').textContent = msg;
+}
 
 function doLogin() {
-  const now = Date.now();
-  if (now < loginLockedUntil) {
-    const secs = Math.ceil((loginLockedUntil - now) / 1000);
-    document.getElementById('login-err').style.color = "var(--red)";
-    document.getElementById('login-err').textContent = `✗ Quá nhiều lần thử. Vui lòng đợi ${secs} giây.`;
-    return;
-  }
-
-  const email = document.getElementById('login-email').value;
+  const email = document.getElementById('login-email').value.trim();
   const pw = document.getElementById('login-pw').value;
-  if (!email || !pw) return;
+  if (!email || !pw) { showLoginErr('Vui lòng nhập email và mật khẩu.'); return; }
   
-  document.getElementById('login-err').textContent = "Đang kết nối an toàn...";
-  document.getElementById('login-err').style.color = "var(--gold)";
+  showLoginInfo('⏳ Đang kết nối...');
   
   auth.signInWithEmailAndPassword(email, pw)
-    .then(() => { loginAttempts = 0; }) // Reset sau khi đăng nhập thành công
+    .then(() => showLoginInfo('✓ Xác thực thành công, đang tải...'))
     .catch(error => {
-      loginAttempts++;
-      document.getElementById('login-err').style.color = "var(--red)";
-      if (loginAttempts >= 5) {
-        loginLockedUntil = Date.now() + 60000; // Khóa 60 giây
-        loginAttempts = 0;
-        document.getElementById('login-err').textContent = "✗ Quá nhiều lần thử. Vui lòng đợi 60 giây.";
-      } else {
-        document.getElementById('login-err').textContent = "✗ Sai email hoặc mật khẩu!";
-      }
+      // Hiện mã lỗi thật để dễ debug
+      const msg = {
+        'auth/user-not-found':    '✗ Email không tồn tại trong hệ thống.',
+        'auth/wrong-password':    '✗ Mật khẩu không đúng.',
+        'auth/invalid-credential':'✗ Email hoặc mật khẩu không đúng.',
+        'auth/invalid-email':     '✗ Định dạng email không hợp lệ.',
+        'auth/user-disabled':     '✗ Tài khoản đã bị vô hiệu hóa.',
+        'auth/too-many-requests': '✗ Quá nhiều lần thử. Vui lòng đợi vài phút hoặc đặt lại mật khẩu.',
+        'auth/network-request-failed': '✗ Lỗi mạng. Kiểm tra kết nối internet.',
+      }[error.code] || `✗ Lỗi: ${error.code} — ${error.message}`;
+      showLoginErr(msg);
     });
 }
 
@@ -544,7 +500,6 @@ function startRealtimeSync() {
       members = data.members || [];
       if (data.clan) document.getElementById('clan-display').textContent = data.clan;
       render();
-      checkGioi();
       showSaveStatus('✓ Đã đồng bộ từ máy chủ', '#40c060');
     } else {
       members = [];
@@ -638,19 +593,8 @@ function buildTree(data) {
   });
 
   units.forEach(u => {
-    // Tìm parentUnitId bằng cách kiểm tra tất cả members trong unit
-    // (con có thể được gán parentId trỏ vào mẹ hoặc cha)
-    let found = null;
-    for (const mid of u.members) {
-      const member = data.find(x => x.id === mid);
-      if (member && member.parentId && unitMap[member.parentId]) {
-        found = unitMap[member.parentId];
-        break;
-      }
-    }
-    // Nếu không tìm thấy qua parentId, thử qua spouseId của members
-    // (trường hợp mẹ không có parentId nhưng spouseId trỏ đến cha đã có parentUnitId)
-    u.parentUnitId = found;
+    const primary = data.find(x=>x.id===u.members[0]);
+    u.parentUnitId = (primary && primary.parentId) ? (unitMap[primary.parentId] || null) : null;
   });
 
   const unitById = {}; units.forEach(u => unitById[u.id]=u);
@@ -740,23 +684,9 @@ function render(){
   Object.entries(childrenByUnit).forEach(([puid, childUnits]) => {
     const pup = unitPos[puid]; if (!pup) return;
     const pUnit = units.find(u=>u.id===puid);
-
-    // Đường kết nối xuất phát từ GIỮA cặp đôi nếu có 2 người
-    let fromX;
-    if (pUnit.members.length === 2) {
-      const p1 = pos[pUnit.members[0]], p2 = pos[pUnit.members[1]];
-      fromX = p1 && p2 ? (p1.x + p2.x) / 2 : pup.x;
-    } else {
-      fromX = pup.x;
-    }
-
-    // Chiều cao node tính theo người có ảnh (bất kỳ ai trong cặp)
-    const pNodeH = pUnit.members.some(mid => {
-      const mb = members.find(x => x.id === mid);
-      return mb && mb.photo && isSafePhotoUrl(mb.photo);
-    }) ? NODE_H + 44 : NODE_H;
-
-    const fromY = pup.y + pNodeH;
+    const pMember = members.find(x=>x.id===pUnit.members[0]);
+    const pNodeH = pMember && pMember.photo ? NODE_H + 44 : NODE_H;
+    const fromX = pup.x, fromY = pup.y + pNodeH;
     const firstChild = childUnits[0];
     const childY = unitPos[firstChild.id]?.y ?? (pup.y + NODE_H + V_GAP);
     const midY = fromY + (childY - fromY) * 0.5;
@@ -783,11 +713,9 @@ function render(){
     const alive=!m.death; const rx=m.gender==='female'?30:4;
     const stroke=isSelected?'#ffd700':c.stroke;
     const sw=isSelected?3:1.5; const glow=isSelected?' filter="url(#glow)"':'';
-    const yearStr=m.birth?(m.death?`${escapeHTML(m.birth)}–${escapeHTML(m.death)}`:`sinh ${escapeHTML(m.birth)}`):'';
-    const rawName=m.name.length>16?m.name.slice(0,15)+'…':m.name;
-    const shortName=escapeHTML(rawName);
-    const hasPhoto = m.photo && isSafePhotoUrl(m.photo); const nodeH = hasPhoto ? NODE_H + 44 : NODE_H;
-    const safePhotoUrl = hasPhoto ? m.photo : '';
+    const yearStr=m.birth?(m.death?`${m.birth}–${m.death}`:`sinh ${m.birth}`):'';
+    const shortName=m.name.length>16?m.name.slice(0,15)+'…':m.name;
+    const hasPhoto = !!m.photo; const nodeH = hasPhoto ? NODE_H + 44 : NODE_H;
 
     html+=`<g class="node" data-id="${m.id}" style="cursor:pointer;opacity:${opacity}" onclick="selectMember('${m.id}')">
       <rect x="${p.x-NODE_W/2}" y="${p.y}" width="${NODE_W}" height="${nodeH}" rx="${rx}" fill="${c.fill}" stroke="${stroke}" stroke-width="${sw}" filter="url(#shadow)"${glow}/>
@@ -795,7 +723,7 @@ function render(){
       ${hasPhoto?`
         <defs><clipPath id="cp_${m.id}"><circle cx="${p.x}" cy="${p.y+26}" r="20"/></clipPath></defs>
         <circle cx="${p.x}" cy="${p.y+26}" r="22" fill="none" stroke="${stroke}" stroke-width="1.5"/>
-        <image href="${safePhotoUrl}" x="${p.x-20}" y="${p.y+6}" width="40" height="40" clip-path="url(#cp_${m.id})" preserveAspectRatio="xMidYMid slice"/>
+        <image href="${m.photo}" x="${p.x-20}" y="${p.y+6}" width="40" height="40" clip-path="url(#cp_${m.id})" preserveAspectRatio="xMidYMid slice"/>
         <text x="${p.x}" y="${p.y+72}" text-anchor="middle" fill="${c.text}" font-family="Cormorant Garamond,serif" font-size="13" font-weight="600">${shortName}</text>
         <text x="${p.x}" y="${p.y+86}" text-anchor="middle" fill="${c.stroke}" font-family="Cormorant Garamond,serif" font-size="10" font-style="italic">${yearStr}</text>
       `:`
@@ -809,39 +737,22 @@ function render(){
   svg.innerHTML=html;
   setupDrag(); 
 
-  // Auto-fit: lần đầu load → scale cây vừa khít wrapper
+  // --- THÊM LOGIC TỰ ĐỘNG CĂN GIỮA ---
   if (panX === 0 && panY === 0) {
-    fitTree(W, H);
+    const wrapper = document.getElementById('tree-wrapper');
+    // Nếu màn hình rộng hơn cây -> Đẩy ra giữa. Nếu cây to hơn -> Đẩy cách lề 20px
+    panX = wrapper.clientWidth > W ? (wrapper.clientWidth - W) / 2 : 20;
+    panY = 40; // Cách mép trên 40px cho thoáng
   }
+  // -----------------------------------
 
   applyTransform(); 
   renderStats(gen,maxGen); 
   renderLegend(maxGen);
 }
 
-function fitTree(W, H) {
-  const wrapper = document.getElementById('tree-wrapper');
-  const vw = wrapper.clientWidth;
-  const vh = wrapper.clientHeight;
-  const PAD = 32; // padding xung quanh
-  const scaleX = (vw - PAD * 2) / W;
-  const scaleY = (vh - PAD * 2) / H;
-  scale = Math.min(scaleX, scaleY, 1); // không phóng to hơn 100%
-  scale = Math.max(scale, 0.15);       // không thu nhỏ quá mức
-  panX = (vw - W * scale) / 2;
-  panY = (vh - H * scale) / 2;
-}
-
 function applyTransform(){ document.getElementById('tree-svg').style.transform=`translate(${panX}px,${panY}px) scale(${scale})`; }
-
-function resetView() { 
-  const svg = document.getElementById('tree-svg');
-  const W = parseFloat(svg.getAttribute('width')) || 0;
-  const H = parseFloat(svg.getAttribute('height')) || 0;
-  panX = 0; panY = 0; scale = 1; // reset để fitTree tính lại
-  fitTree(W, H);
-  applyTransform(); 
-}
+function setupDrag() {
   const wrapper = document.getElementById('tree-wrapper');
   
   // 1. Tương tác trên MÁY TÍNH (Chuột)
@@ -878,6 +789,17 @@ function resetView() {
 }
 function zoomIn(){ scale=Math.min(scale*1.2,3); applyTransform(); }
 function zoomOut(){ scale=Math.max(scale/1.2,.2); applyTransform(); }
+function resetView() { 
+  scale = 1; 
+  const svg = document.getElementById('tree-svg');
+  const wrapper = document.getElementById('tree-wrapper');
+  const W = parseFloat(svg.getAttribute('width')) || 0;
+  
+  // Tính toán lại tâm y như lúc tải trang
+  panX = wrapper.clientWidth > W ? (wrapper.clientWidth - W) / 2 : 20;
+  panY = 40; 
+  applyTransform(); 
+}
 document.getElementById('tree-wrapper').addEventListener('wheel',e=>{ e.preventDefault(); if(e.deltaY<0) zoomIn(); else zoomOut(); },{passive:false});
 
 // ═══════════════════════════════════════════════════
@@ -907,37 +829,27 @@ function openPanel(id){
   const spouse=m.spouseId?members.find(x=>x.id===m.spouseId):null;
   const children=members.filter(x=>x.parentId===id);
   
-  // Validate URL ảnh trước khi hiển thị (chống XSS qua src)
-  const safePhoto = isSafePhotoUrl(m.photo) ? m.photo : null;
-  const avatarHTML = safePhoto
-    ? `<img src="${safePhoto}" style="width:80px;height:80px;border-radius:50%;border:3px solid var(--gold);object-fit:cover;display:block;margin:0 auto .8rem" onerror="this.style.display='none'">`
-    : `<div class="avatar-circle">${escapeHTML(m.name.split(' ').slice(-2).map(n=>n[0]).join('').toUpperCase())}</div>`;
+  const avatarHTML = m.photo ? `<img src="${m.photo}" style="width:80px;height:80px;border-radius:50%;border:3px solid var(--gold);object-fit:cover;display:block;margin:0 auto .8rem">` : `<div class="avatar-circle">${m.name.split(' ').slice(-2).map(n=>n[0]).join('').toUpperCase()}</div>`;
 
   document.getElementById('panel-body').innerHTML=`
     ${avatarHTML}
-    <div class="panel-name">${escapeHTML(m.name)}</div>
+    <div class="panel-name">${m.name}</div>
     <div class="panel-gen">Đời thứ ${g+1} · ${m.gender==='male'?'Nam':'Nữ'} · ${!m.death?'<span style="color:#40c060">Còn sống</span>':'Đã mất'}</div>
-    <div class="info-row"><span class="info-label">Năm sinh</span><span class="info-val">${escapeHTML(m.birth)||'—'}</span></div>
-    ${m.death?`<div class="info-row"><span class="info-label">Năm mất</span><span class="info-val">${escapeHTML(m.death)}</span></div>`:''}
-    <div class="info-row"><span class="info-label">Nơi sinh</span><span class="info-val">${escapeHTML(m.birthplace)||'—'}</span></div>
-    <div class="info-row"><span class="info-label">Nghề nghiệp</span><span class="info-val">${escapeHTML(m.job)||'—'}</span></div>
-    ${m.gioid?`<div class="info-row"><span class="info-label">🕯️ Ngày giỗ</span><span class="info-val">${escapeHTML(m.gioid)} (âm lịch)</span></div>`:''}
-    ${parent?`<div class="info-row"><span class="info-label">Cha/Mẹ</span><span class="info-val" style="cursor:pointer;color:#c99040;text-decoration:underline" onclick="selectMember('${escapeHTML(parent.id)}')">${escapeHTML(parent.name)}</span></div>`:''}
-    ${spouse?`<div class="info-row"><span class="info-label">Vợ/Chồng</span><span class="info-val" style="cursor:pointer;color:#c99040;text-decoration:underline" onclick="selectMember('${escapeHTML(spouse.id)}')">${escapeHTML(spouse.name)}</span></div>`:''}
-    ${children.length?`<div class="info-row"><span class="info-label">Con cái</span><span class="info-val">${children.map(c=>`<span style="cursor:pointer;color:#c99040;text-decoration:underline" onclick="selectMember('${escapeHTML(c.id)}')">${escapeHTML(c.name)}</span>`).join(', ')}</span></div>`:''}
-    ${(m.phone||m.email||m.facebook)?`<div style="font-size:.8rem;color:var(--sepia);letter-spacing:.06em;text-transform:uppercase;margin:.7rem 0 .3rem;border-bottom:1px solid rgba(139,105,20,.2);padding-bottom:.3rem">Liên hệ</div>`:''}
-    ${m.phone?`<div class="info-row"><span class="info-label">📞 Điện thoại</span><span class="info-val"><a href="tel:${escapeHTML(m.phone)}" style="color:var(--ink);text-decoration:none">${escapeHTML(m.phone)}</a></span></div>`:''}
-    ${m.email?`<div class="info-row"><span class="info-label">✉️ Email</span><span class="info-val"><a href="mailto:${escapeHTML(m.email)}" style="color:var(--ink);text-decoration:none">${escapeHTML(m.email)}</a></span></div>`:''}
-    ${m.facebook?`<div class="info-row"><span class="info-label">📘 Facebook</span><span class="info-val"><a href="${escapeHTML(m.facebook).startsWith('http')?escapeHTML(m.facebook):'https://'+escapeHTML(m.facebook)}" target="_blank" rel="noopener noreferrer" style="color:#c99040;text-decoration:underline">${escapeHTML(m.facebook)}</a></span></div>`:''}
-    ${m.note?`<div class="panel-note">${escapeHTML(m.note)}</div>`:''}
+    <div class="info-row"><span class="info-label">Năm sinh</span><span class="info-val">${m.birth||'—'}</span></div>
+    ${m.death?`<div class="info-row"><span class="info-label">Năm mất</span><span class="info-val">${m.death}</span></div>`:''}
+    <div class="info-row"><span class="info-label">Nơi sinh</span><span class="info-val">${m.birthplace||'—'}</span></div>
+    <div class="info-row"><span class="info-label">Nghề nghiệp</span><span class="info-val">${m.job||'—'}</span></div>
+    ${parent?`<div class="info-row"><span class="info-label">Cha/Mẹ</span><span class="info-val" style="cursor:pointer;color:#c99040;text-decoration:underline" onclick="selectMember('${parent.id}')">${parent.name}</span></div>`:''}
+    ${spouse?`<div class="info-row"><span class="info-label">Vợ/Chồng</span><span class="info-val" style="cursor:pointer;color:#c99040;text-decoration:underline" onclick="selectMember('${spouse.id}')">${spouse.name}</span></div>`:''}
+    ${children.length?`<div class="info-row"><span class="info-label">Con cái</span><span class="info-val">${children.map(c=>`<span style="cursor:pointer;color:#c99040;text-decoration:underline" onclick="selectMember('${c.id}')">${c.name}</span>`).join(', ')}</span></div>`:''}
+    ${m.note?`<div class="panel-note">${m.note}</div>`:''}
   `;
 
   // CHỈ HIỂN THỊ NÚT SỬA/XÓA NẾU LÀ ADMIN
-  const safeId = escapeHTML(id);
   document.getElementById('panel-actions').innerHTML = isAdmin ? `
-    <button class="btn" onclick="openEditModal('${safeId}')">✏ Sửa</button>
-    <button class="btn btn-red" onclick="confirmDelete('${safeId}')">🗑 Xóa</button>
-    <button class="btn" onclick="openAddModal('${safeId}')">＋ Thêm con</button>
+    <button class="btn" onclick="openEditModal('${id}')">✏ Sửa</button>
+    <button class="btn btn-red" onclick="confirmDelete('${id}')">🗑 Xóa</button>
+    <button class="btn" onclick="openAddModal('${id}')">＋ Thêm con</button>
   ` : '';
   document.getElementById('side-panel').classList.add('open');
 }
@@ -953,67 +865,39 @@ function openAddModal(parentId){
 function openEditModal(id){
   if(!isAdmin) return; const m=members.find(x=>x.id===id); if(!m) return;
   editingId=id; document.getElementById('modal-title').textContent='Sửa thông tin';
-  ['name','gender','birth','death','gioid','birthplace','job','note','phone','email','facebook'].forEach(k=>{ if(document.getElementById('f-'+k)) document.getElementById('f-'+k).value=m[k]||''; });
+  ['name','gender','birth','death','birthplace','job','note','phone','email','facebook'].forEach(k=>{ if(document.getElementById('f-'+k)) document.getElementById('f-'+k).value=m[k]||''; });
   if(m.photo) setPhotoPreview(m.photo); else clearPhoto();
   populateSelects(id); document.getElementById('f-parent').value=m.parentId||''; document.getElementById('f-spouse').value=m.spouseId||'';
   document.getElementById('modal-overlay').classList.add('show');
 }
-function clearForm(){ ['name','birth','death','gioid','birthplace','job','note','phone','email','facebook'].forEach(k=>{ if(document.getElementById('f-'+k)) document.getElementById('f-'+k).value=''; }); document.getElementById('f-gender').value='male'; clearPhoto(); }
+function clearForm(){ ['name','birth','death','birthplace','job','note','phone','email','facebook'].forEach(k=>{ if(document.getElementById('f-'+k)) document.getElementById('f-'+k).value=''; }); document.getElementById('f-gender').value='male'; clearPhoto(); }
 function populateSelects(excludeId){
   const ps=document.getElementById('f-parent'); const ss=document.getElementById('f-spouse');
   ps.innerHTML='<option value="">— Không có (gốc) —</option>'; ss.innerHTML='<option value="">— Chưa có —</option>';
-  members.forEach(m=>{ if(m.id===excludeId) return; const safeId=escapeHTML(m.id); const safeName=escapeHTML(m.name); const safeBirth=escapeHTML(m.birth||'?'); ps.innerHTML+=`<option value="${safeId}">${safeName} (${safeBirth})</option>`; ss.innerHTML+=`<option value="${safeId}">${safeName} (${safeBirth})</option>`; });
+  members.forEach(m=>{ if(m.id===excludeId) return; ps.innerHTML+=`<option value="${m.id}">${m.name} (${m.birth||'?'})</option>`; ss.innerHTML+=`<option value="${m.id}">${m.name} (${m.birth||'?'})</option>`; });
 }
 function closeModal(){ document.getElementById('modal-overlay').classList.remove('show'); editingId=null; }
 function confirmDelete(id){
-  if(!isAdmin) return; const m=members.find(x=>x.id===id); if(!confirm(`Xóa thành viên "${escapeHTML(m.name)}"? Hành động này không thể hoàn tác.`)) return;
+  if(!isAdmin) return; const m=members.find(x=>x.id===id); if(!confirm(`Xóa thành viên "${m.name}"? Hành động này không thể hoàn tác.`)) return;
   members.forEach(x=>{ if(x.parentId===id) x.parentId=null; if(x.spouseId===id) x.spouseId=null; }); members=members.filter(x=>x.id!==id);
   closePanel(); render(); scheduleSave();
 }
 function saveModal(){
   if(!isAdmin) return; const name=document.getElementById('f-name').value.trim(); if(!name){alert('Vui lòng nhập họ và tên!');return;}
   const photo = document.getElementById('photo-preview').dataset.photo || null;
-
-  // Xây dựng data mới — các field trống sẽ được set null để xóa giá trị cũ
-  const data = { name, gender: document.getElementById('f-gender').value, photo };
-  ['birth','death','gioid','birthplace','job','phone','email','facebook','note'].forEach(k => {
-    const v = document.getElementById('f-'+k).value.trim();
-    data[k] = v || null; // null thay vì bỏ qua — để ghi đè xóa giá trị cũ
-  });
-
-  const pId = document.getElementById('f-parent').value || null;
-  const sId = document.getElementById('f-spouse').value || null;
-  data.parentId = pId || null;
-  data.spouseId = sId || null;
+  const data = { name, gender:document.getElementById('f-gender').value, photo };
+  ['birth','death','birthplace','job','phone','email','facebook','note'].forEach(k=>{ const v=document.getElementById('f-'+k).value.trim(); if(v) data[k]=v; });
+  const pId=document.getElementById('f-parent').value, sId=document.getElementById('f-spouse').value;
+  if(pId) data.parentId=pId; if(sId) data.spouseId=sId;
 
   if(editingId){
-    const idx = members.findIndex(m => m.id === editingId);
-    const oldSpouseId = members[idx].spouseId;
-
-    // Nếu vợ/chồng cũ khác vợ/chồng mới → hủy liên kết người cũ
-    if(oldSpouseId && oldSpouseId !== sId){
-      const oldSpouse = members.find(m => m.id === oldSpouseId);
-      if(oldSpouse) oldSpouse.spouseId = null;
-    }
-
-    // Ghi đè toàn bộ — kể cả các field null để xóa dữ liệu cũ
-    members[idx] = { ...members[idx], ...data };
-
-    // Xóa hẳn các key null khỏi object để Firestore không lưu rác
-    Object.keys(members[idx]).forEach(k => { if(members[idx][k] === null) delete members[idx][k]; });
-
-    // Cập nhật liên kết vợ/chồng mới
-    if(sId){ const sp = members.find(m => m.id === sId); if(sp) sp.spouseId = editingId; }
+    const idx=members.findIndex(m=>m.id===editingId); members[idx]={...members[idx],...data};
+    if(sId){ const sp=members.find(m=>m.id===sId); if(sp) sp.spouseId=editingId; }
   } else {
-    const id = generateId();
-    const newMember = { id, ...data };
-    Object.keys(newMember).forEach(k => { if(newMember[k] === null) delete newMember[k]; });
-    members.push(newMember);
-    if(sId){ const sp = members.find(m => m.id === sId); if(sp) sp.spouseId = id; }
+    const id=String(Date.now()); members.push({id,...data});
+    if(sId){ const sp=members.find(m=>m.id===sId); if(sp) sp.spouseId=id; }
   }
-
-  const savedEditingId = editingId;
-  closeModal(); render(); if(savedEditingId) openPanel(savedEditingId); scheduleSave();
+  closeModal(); render(); if(editingId) openPanel(editingId); scheduleSave();
 }
 
 // XỬ LÝ ẢNH BẰNG FIREBASE STORAGE
@@ -1031,408 +915,14 @@ async function handlePhotoFile(e) {
         canvas.toBlob(async blob => {
           const storageRef = storage.ref(`photos/${Date.now()}_${file.name}`);
           const snap = await storageRef.put(blob, { contentType: 'image/jpeg' });
-          const downloadUrl = await snap.ref.getDownloadURL();
-          if (!isSafePhotoUrl(downloadUrl)) throw new Error('URL ảnh không hợp lệ');
-          setPhotoPreview(downloadUrl); showSaveStatus('✓ Đã tải ảnh lên an toàn', '#40c060');
+          setPhotoPreview(await snap.ref.getDownloadURL()); showSaveStatus('✓ Đã tải ảnh lên an toàn', '#40c060');
         }, 'image/jpeg', 0.8);
       } catch(err) { showSaveStatus('⚠ Lỗi tải ảnh: ' + err.message, '#e06060'); }
     }; img.src = ev.target.result;
   }; reader.readAsDataURL(file);
 }
-function setPhotoPreview(src) {
-  if (!isSafePhotoUrl(src)) { showSaveStatus('⚠ URL ảnh không hợp lệ', '#e06060'); return; }
-  const el = document.getElementById('photo-preview');
-  el.dataset.photo = src;
-  const img = document.createElement('img');
-  img.src = src;
-  img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
-  el.innerHTML = '';
-  el.appendChild(img);
-  document.getElementById('btn-clear-photo').style.display = 'inline-block';
-}
+function setPhotoPreview(src) { const el = document.getElementById('photo-preview'); el.dataset.photo = src; el.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`; document.getElementById('btn-clear-photo').style.display = 'inline-block'; }
 function clearPhoto() { const el = document.getElementById('photo-preview'); el.dataset.photo = ''; el.innerHTML = '👤'; document.getElementById('btn-clear-photo').style.display = 'none'; document.getElementById('f-photo-file').value = ''; }
-
-// ═══════════════════════════════════════════════════
-//  9. ĐIỀU HƯỚNG TAB
-// ═══════════════════════════════════════════════════
-function switchTab(tab) {
-  document.getElementById('pane-cay').style.display = tab==='cay' ? '' : 'none';
-  document.getElementById('pane-viecho').style.display = tab==='viecho' ? '' : 'none';
-  document.getElementById('tab-cay').style.borderBottomColor = tab==='cay' ? 'var(--gold)' : 'transparent';
-  document.getElementById('tab-cay').style.color = tab==='cay' ? 'var(--gold)' : 'var(--sepia)';
-  document.getElementById('tab-viecho').style.borderBottomColor = tab==='viecho' ? 'var(--gold)' : 'transparent';
-  document.getElementById('tab-viecho').style.color = tab==='viecho' ? 'var(--gold)' : 'var(--sepia)';
-  if (tab==='viecho') { initYearSelects(); renderCungHo(); }
-}
-function switchSubTab(sub) {
-  document.getElementById('pane-cung').style.display = sub==='cung' ? '' : 'none';
-  document.getElementById('pane-truc').style.display = sub==='truc' ? '' : 'none';
-  const sc = document.getElementById('subtab-cung'), st = document.getElementById('subtab-truc');
-  sc.style.background = sub==='cung' ? 'var(--gold)' : 'none';
-  sc.style.color = sub==='cung' ? '#1a0a00' : 'var(--sepia)';
-  sc.style.borderColor = sub==='cung' ? 'var(--gold)' : 'rgba(139,105,20,.4)';
-  st.style.background = sub==='truc' ? 'var(--gold)' : 'none';
-  st.style.color = sub==='truc' ? '#1a0a00' : 'var(--sepia)';
-  st.style.borderColor = sub==='truc' ? 'var(--gold)' : 'rgba(139,105,20,.4)';
-  if (sub==='truc') renderTrucTet();
-}
-
-// ═══════════════════════════════════════════════════
-//  10. CÚNG HỌ
-// ═══════════════════════════════════════════════════
-let cungData = {}; // { "2025_12": { tien, gao, ga, dinhList: {id: {da_dong, ghichu}} } }
-
-function initYearSelects() {
-  const yr = new Date().getFullYear();
-  ['cung-year','truc-year'].forEach(id => {
-    const sel = document.getElementById(id);
-    if (sel.options.length > 0) return;
-    for (let y = yr+1; y >= yr-3; y--) {
-      const opt = document.createElement('option');
-      opt.value = y; opt.textContent = `Năm ${y}`;
-      if (y === yr) opt.selected = true;
-      sel.appendChild(opt);
-    }
-  });
-}
-
-function cungKey() {
-  const y = document.getElementById('cung-year').value;
-  const k = document.getElementById('cung-ky').value;
-  return `${y}_${k}`;
-}
-
-async function loadCungHo(key) {
-  try {
-    const snap = await db.collection('viec-ho').doc('cung_'+key).get();
-    if (snap.exists) cungData[key] = snap.data();
-    else cungData[key] = {};
-  } catch(e) { cungData[key] = {}; }
-}
-
-function getDinhList() {
-  return members.filter(m => m.gender === 'male' && !m.death);
-}
-
-function renderCungHo() {
-  const key = cungKey();
-  const d = cungData[key] || {};
-  const dinhs = getDinhList();
-
-  // Load mức đóng
-  document.getElementById('cung-tien').value = d.tien || '';
-  document.getElementById('cung-gao').value = d.gao || '';
-  document.getElementById('cung-ga').value = d.ga || '';
-  document.getElementById('cung-tien').disabled = !isAdmin;
-  document.getElementById('cung-gao').disabled = !isAdmin;
-  document.getElementById('cung-ga').disabled = !isAdmin;
-
-  const dinhStatus = d.dinhList || {};
-  let html = '';
-  let daDong = 0;
-  dinhs.forEach(m => {
-    const st = dinhStatus[m.id] || {};
-    const checked = st.da_dong ? 'checked' : '';
-    const ghichu = escapeHTML(st.ghichu || '');
-    daDong += st.da_dong ? 1 : 0;
-    html += `<div style="display:flex;align-items:center;gap:.6rem;padding:.45rem .6rem;border-bottom:1px solid rgba(139,105,20,.15);flex-wrap:wrap">
-      <input type="checkbox" id="ck_${escapeHTML(m.id)}" ${checked} ${isAdmin?'':'disabled'}
-        onchange="toggleDaDong('${escapeHTML(m.id)}')"
-        style="width:16px;height:16px;accent-color:var(--gold);cursor:${isAdmin?'pointer':'default'}">
-      <span style="flex:1;font-size:.9rem;color:var(--ink)">${escapeHTML(m.name)}</span>
-      ${st.da_dong?`<span style="font-size:.75rem;color:#40c060;background:rgba(64,192,96,.1);border:1px solid rgba(64,192,96,.3);border-radius:2px;padding:.1rem .4rem">✓ Đã đóng</span>`:`<span style="font-size:.75rem;color:#e08040;background:rgba(224,128,64,.1);border:1px solid rgba(224,128,64,.3);border-radius:2px;padding:.1rem .4rem">Chưa đóng</span>`}
-      ${isAdmin?`<input type="text" value="${ghichu}" placeholder="Ghi chú..." onchange="setGhiChu('${escapeHTML(m.id)}',this.value)"
-        style="font-size:.78rem;font-family:'Cormorant Garamond',serif;background:rgba(139,105,20,.08);border:1px solid rgba(139,105,20,.2);color:var(--ink);padding:.15rem .4rem;border-radius:2px;width:100px">`:
-        (ghichu?`<span style="font-size:.75rem;color:var(--sepia);font-style:italic">${ghichu}</span>`:'')}
-    </div>`;
-  });
-
-  document.getElementById('cung-list').innerHTML = html || '<div style="color:var(--sepia);font-style:italic;font-size:.9rem">Chưa có đinh nào trong họ.</div>';
-  document.getElementById('cung-summary').innerHTML =
-    `<b style="color:var(--gold)">Tổng kết:</b> ${daDong}/${dinhs.length} đinh đã đóng
-     <span style="margin-left:1rem;color:var(--sepia)">
-       ${d.tien?`💰 ${escapeHTML(d.tien)}/người`:''}
-       ${d.gao?` · 🌾 ${escapeHTML(d.gao)}/người`:''}
-       ${d.ga?` · 🐔 ${escapeHTML(d.ga)}/người`:''}
-     </span>`;
-}
-
-async function ensureCungLoaded() {
-  const key = cungKey();
-  if (!cungData[key]) await loadCungHo(key);
-  return key;
-}
-
-async function toggleDaDong(mid) {
-  if (!isAdmin) return;
-  const key = await ensureCungLoaded();
-  if (!cungData[key].dinhList) cungData[key].dinhList = {};
-  const cur = cungData[key].dinhList[mid] || {};
-  cungData[key].dinhList[mid] = { ...cur, da_dong: !cur.da_dong };
-  renderCungHo();
-}
-
-async function setGhiChu(mid, val) {
-  if (!isAdmin) return;
-  const key = await ensureCungLoaded();
-  if (!cungData[key].dinhList) cungData[key].dinhList = {};
-  const cur = cungData[key].dinhList[mid] || {};
-  cungData[key].dinhList[mid] = { ...cur, ghichu: val };
-}
-
-async function saveCungHo() {
-  if (!isAdmin) return;
-  const key = await ensureCungLoaded();
-  cungData[key].tien = document.getElementById('cung-tien').value.trim();
-  cungData[key].gao = document.getElementById('cung-gao').value.trim();
-  cungData[key].ga = document.getElementById('cung-ga').value.trim();
-  try {
-    await db.collection('viec-ho').doc('cung_'+key).set(cungData[key]);
-    showSaveStatus('✓ Đã lưu thông tin cúng họ', '#40c060');
-    renderCungHo();
-  } catch(e) { showSaveStatus('⚠ Lỗi lưu: '+e.message, '#e06060'); }
-}
-
-// ═══════════════════════════════════════════════════
-//  11. TRỰC TẾT
-// ═══════════════════════════════════════════════════
-const TET_CAS = [
-  { id:'giaothua', label:'🎆 Giao thừa (30 Chạp tối)' },
-  { id:'mung1',    label:'🌅 Mùng 1 Tết (cả ngày)' },
-  { id:'mung2',    label:'🌅 Mùng 2 Tết (cả ngày)' },
-  { id:'mung3',    label:'🌅 Mùng 3 Tết (cả ngày)' },
-];
-let trucData = {};
-
-async function loadTrucTet(year) {
-  try {
-    const snap = await db.collection('viec-ho').doc('truc_'+year).get();
-    if (snap.exists) trucData[year] = snap.data();
-    else trucData[year] = {};
-  } catch(e) { trucData[year] = {}; }
-}
-
-function getMembersForTruc() {
-  // Tất cả thành viên còn sống
-  return members.filter(m => !m.death);
-}
-
-async function renderTrucTet() {
-  const year = document.getElementById('truc-year').value;
-  if (!trucData[year]) await loadTrucTet(year);
-  const d = trucData[year] || {};
-  const allMembers = getMembersForTruc();
-
-  let html = '';
-  TET_CAS.forEach(ca => {
-    const caData = d[ca.id] || { nguoiTruc: [], ghichu: '' };
-    const nguoiTruc = caData.nguoiTruc || [];
-
-    const memberOptions = allMembers.map(m =>
-      `<option value="${escapeHTML(m.id)}" ${nguoiTruc.includes(m.id)?'selected':''}>${escapeHTML(m.name)}</option>`
-    ).join('');
-
-    html += `<div style="background:rgba(139,105,20,.07);border:1px solid rgba(139,105,20,.25);border-radius:6px;padding:.7rem .9rem;margin-bottom:.7rem">
-      <div style="font-size:.9rem;font-weight:700;color:var(--gold);margin-bottom:.5rem">${ca.label}</div>
-      <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-start">
-        <div style="flex:1;min-width:160px">
-          <div style="font-size:.78rem;color:var(--sepia);margin-bottom:.3rem">Người trực:</div>
-          <select multiple id="truc_${ca.id}" ${isAdmin?'':'disabled'}
-            style="width:100%;min-height:80px;font-family:'Cormorant Garamond',serif;font-size:.85rem;background:rgba(139,105,20,.1);border:1px solid rgba(139,105,20,.3);color:var(--ink);border-radius:3px;padding:.3rem">
-            ${memberOptions}
-          </select>
-          ${isAdmin?`<div style="font-size:.72rem;color:var(--sepia);font-style:italic;margin-top:.2rem">Giữ Ctrl/⌘ để chọn nhiều người</div>`:''}
-        </div>
-        <div style="min-width:130px">
-          <div style="font-size:.78rem;color:var(--sepia);margin-bottom:.3rem">Ghi chú:</div>
-          ${isAdmin
-            ? `<textarea id="truc_note_${ca.id}" placeholder="Ghi chú ca trực..."
-                style="width:100%;font-family:'Cormorant Garamond',serif;font-size:.82rem;background:rgba(139,105,20,.1);border:1px solid rgba(139,105,20,.3);color:var(--ink);border-radius:3px;padding:.3rem;resize:vertical;min-height:60px">${escapeHTML(caData.ghichu||'')}</textarea>`
-            : `<div style="font-size:.85rem;color:var(--ink);font-style:italic">${escapeHTML(caData.ghichu||'—')}</div>`
-          }
-          ${nguoiTruc.length
-            ? `<div style="margin-top:.4rem">${nguoiTruc.map(id => {
-                const mb = members.find(x=>x.id===id);
-                return mb ? `<span style="display:inline-block;font-size:.75rem;background:rgba(64,192,96,.15);border:1px solid rgba(64,192,96,.3);border-radius:2px;padding:.1rem .4rem;margin:.1rem;color:#40c060">${escapeHTML(mb.name)}</span>` : '';
-              }).join('')}</div>`
-            : `<div style="font-size:.78rem;color:#e08040;margin-top:.4rem;font-style:italic">Chưa phân công</div>`
-          }
-        </div>
-      </div>
-    </div>`;
-  });
-
-  document.getElementById('truc-list').innerHTML = html;
-}
-
-async function saveTrucTet() {
-  if (!isAdmin) return;
-  const year = document.getElementById('truc-year').value;
-  const data = {};
-  TET_CAS.forEach(ca => {
-    const sel = document.getElementById('truc_'+ca.id);
-    const note = document.getElementById('truc_note_'+ca.id);
-    const nguoiTruc = sel ? Array.from(sel.selectedOptions).map(o=>o.value) : [];
-    data[ca.id] = { nguoiTruc, ghichu: note ? note.value.trim() : '' };
-  });
-  try {
-    await db.collection('viec-ho').doc('truc_'+year).set(data);
-    trucData[year] = data;
-    showSaveStatus('✓ Đã lưu phân công trực tết', '#40c060');
-    renderTrucTet();
-  } catch(e) { showSaveStatus('⚠ Lỗi lưu: '+e.message, '#e06060'); }
-}
-
-// ═══════════════════════════════════════════════════
-
-// Thuật toán chuyển đổi dương-âm lịch (Hồ Ngọc Đức algorithm)
-function solarToLunar(dd, mm, yy) {
-  const PI = Math.PI;
-  function INT(d){ return Math.floor(d); }
-  function jdFromDate(dd,mm,yy){
-    let a=INT((14-mm)/12), y=yy+4800-a, m=mm+12*a-3;
-    let jd=dd+INT((153*m+2)/5)+365*y+INT(y/4)-INT(y/100)+INT(y/400)-32045;
-    if(jd<2299161){jd=dd+INT((153*m+2)/5)+365*y+INT(y/4)-32083;}
-    return jd;
-  }
-  function newMoon(k){
-    const T=k/1236.85, T2=T*T, T3=T2*T, dr=PI/180;
-    let Jde=2415020.75933+29.53058868*k+0.0001178*T2-0.000000155*T3+0.00033*Math.sin((166.56+132.87*T-0.009173*T2)*dr);
-    const M=(359.2242+29.10535608*k-0.0000333*T2-0.00000347*T3)*dr;
-    const Mpr=(306.0253+385.81691806*k+0.0107306*T2+0.00001236*T3)*dr;
-    const F=(21.2964+390.67050646*k-0.0016528*T2-0.00000239*T3)*dr;
-    let C1=(0.1734-0.000393*T)*Math.sin(M)+0.0021*Math.sin(2*M)-0.4068*Math.sin(Mpr)+0.0161*Math.sin(2*Mpr)-0.0004*Math.sin(3*Mpr)+0.0104*Math.sin(2*F)-0.0051*Math.sin(M+Mpr)-0.0074*Math.sin(M-Mpr)+0.0004*Math.sin(2*F+M)-0.0004*Math.sin(2*F-M)-0.0006*Math.sin(2*F+Mpr)+0.0010*Math.sin(2*F-Mpr)+0.0005*Math.sin(M+2*Mpr);
-    let deltat=1; if(yy<=-1000){deltat=0.000124*Math.pow(yy/100,2)+0.006532*yy/100+0.1375;}
-    else if(yy<=0){deltat=-0.000278*(yy/100-17.1)*(yy/100-17.1)+0.000394*(yy/100)*yy/100-0.0154*(yy/100)+0.4025;}
-    else if(yy<=948){deltat=102+123.5*(yy/100-9.0);}
-    else deltat=65.5+87.4*(yy/100-19.0)-0.5*(yy/100-19.0)*(yy/100-19.0)+0.01*(yy/100-19.0)*(yy/100-19.0)*(yy/100-19.0);
-    return Jde+C1-(deltat/86400);
-  }
-  function sunLongitude(jdn){
-    const T=(jdn-2451545.0)/36525, T2=T*T, dr=PI/180;
-    let DL=0,L0=280.46646+36000.76983*T+0.0003032*T2;
-    const M=(357.52911+35999.05029*T-0.0001537*T2)*dr;
-    const C=(1.914602-0.004817*T-0.000014*T2)*Math.sin(M)+(0.019993-0.000101*T)*Math.sin(2*M)+0.000289*Math.sin(3*M);
-    let sun=L0+C; const f=sun/360; sun-=360*INT(f); return sun;
-  }
-  function getLunarMonth11(yy){
-    const off=jdFromDate(31,12,yy)-2415021, k=INT(off/29.530588853),nm=newMoon(k);
-    const sunLong=INT(sunLongitude(nm)/30)*30;
-    return sunLong>=270?nm:newMoon(k-1);
-  }
-  function getLeapMonthOffset(a11){
-    const k=INT((a11-2415021.076998695)/29.530588853+0.5);
-    let last=0,i=1,arc=INT(sunLongitude(newMoon(k+i))/30)*30;
-    do{ last=arc; i++; arc=INT(sunLongitude(newMoon(k+i))/30)*30; }while(arc!==last&&i<14);
-    return i-1;
-  }
-  const dayNumber=jdFromDate(dd,mm,yy);
-  let k=INT((dayNumber-2415021.076998695)/29.530588853);
-  let monthStart=INT(newMoon(k+1));
-  if(monthStart>dayNumber) monthStart=INT(newMoon(k));
-  let a11=getLunarMonth11(yy), b11=a11;
-  let lunarYear;
-  if(a11>=monthStart){lunarYear=yy-1; b11=a11; a11=getLunarMonth11(yy-1);}
-  else{lunarYear=yy; b11=getLunarMonth11(yy+1);}
-  const lunarDay=dayNumber-monthStart+1;
-  const diff=INT((monthStart-a11)/29);
-  let leapMonth=0, leapMonthDiff=getLeapMonthOffset(a11);
-  if(b11-a11>365){if(diff>=leapMonthDiff)leapMonth=leapMonthDiff;}
-  let lunarMonth=diff+11;
-  if(leapMonth&&diff>=leapMonth)lunarMonth--;
-  if(lunarMonth>12)lunarMonth-=12;
-  if(lunarMonth>=11&&diff<4)lunarYear--;
-  return{day:lunarDay, month:lunarMonth, year:lunarYear};
-}
-
-function getCurrentLunar() {
-  const now = new Date();
-  return solarToLunar(now.getDate(), now.getMonth()+1, now.getFullYear());
-}
-
-function parseGioid(str) {
-  // Chấp nhận định dạng: "15/10", "15-10", "15.10"
-  if (!str) return null;
-  const m = str.trim().match(/^(\d{1,2})[\/\-\.](\d{1,2})$/);
-  if (!m) return null;
-  const day = parseInt(m[1]), month = parseInt(m[2]);
-  if (day < 1 || day > 30 || month < 1 || month > 12) return null;
-  return { day, month };
-}
-
-function checkGioi() {
-  const lunar = getCurrentLunar();
-  const curM = lunar.month;
-  const curD = lunar.day;
-  const WINDOW = 30; // hiện tất cả giỗ trong vòng 30 ngày tới (tính gần đúng)
-
-  const upcoming = [];
-  members.forEach(m => {
-    if (!m.gioid) return;
-    const g = parseGioid(m.gioid);
-    if (!g) return;
-    // Tính số ngày còn lại (tính gần đúng trong tháng âm lịch ~29.5 ngày)
-    let daysLeft;
-    if (g.month === curM) {
-      daysLeft = g.day - curD;
-    } else if (g.month === curM + 1 || (curM === 12 && g.month === 1)) {
-      daysLeft = (30 - curD) + g.day; // gần đúng
-    } else {
-      return; // không trong phạm vi hiển thị
-    }
-    if (daysLeft >= -1 && daysLeft <= WINDOW) { // -1: hôm qua, để không bỏ sót
-      upcoming.push({ member: m, gioi: g, daysLeft });
-    }
-  });
-
-  if (upcoming.length === 0) return;
-
-  // Sắp xếp theo ngày gần nhất
-  upcoming.sort((a,b) => a.daysLeft - b.daysLeft);
-
-  // Tạo/cập nhật banner
-  let banner = document.getElementById('gioi-banner');
-  if (!banner) {
-    banner = document.createElement('div');
-    banner.id = 'gioi-banner';
-    banner.style.cssText = `
-      position:fixed; top:1.2rem; right:1.2rem; z-index:9999;
-      background:linear-gradient(135deg,#3a1a0a,#5a2a10);
-      border:1px solid var(--gold); border-radius:8px;
-      padding:.8rem 1rem; max-width:300px; min-width:220px;
-      box-shadow:0 4px 20px rgba(0,0,0,.5);
-      font-family:'Cormorant Garamond',serif; color:var(--parch);
-      animation: slideIn .4s ease;
-    `;
-    const style = document.createElement('style');
-    style.textContent = `@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}`;
-    document.head.appendChild(style);
-    document.body.appendChild(banner);
-  }
-
-  let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
-    <span style="color:var(--gold);font-size:.85rem;font-weight:700;letter-spacing:.05em">🕯️ NGÀY GIỖ SẮP ĐẾN</span>
-    <button onclick="document.getElementById('gioi-banner').style.display='none'" style="background:none;border:none;color:var(--sepia);cursor:pointer;font-size:1rem;padding:0;line-height:1">✕</button>
-  </div>`;
-
-  upcoming.forEach(({member, gioi, daysLeft}) => {
-    let label = '';
-    if (daysLeft < 0) label = `<span style="color:#e08040">Hôm qua</span>`;
-    else if (daysLeft === 0) label = `<span style="color:#e05050;font-weight:700">Hôm nay!</span>`;
-    else if (daysLeft === 1) label = `<span style="color:#e08040">Ngày mai</span>`;
-    else label = `<span style="color:var(--sepia)">Còn ${daysLeft} ngày</span>`;
-    html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border-top:1px solid rgba(139,105,20,.2)">
-      <div>
-        <div style="font-size:.9rem;font-weight:600">${escapeHTML(member.name)}</div>
-        <div style="font-size:.75rem;color:var(--sepia)">Giỗ ${gioi.day}/${gioi.month} âm lịch</div>
-      </div>
-      ${label}
-    </div>`;
-  });
-
-  banner.innerHTML = html;
-}
-
 </script>
 </body>
 </html>
